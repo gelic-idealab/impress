@@ -29,7 +29,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 8657808734710476654}
+  - {fileID: 1149998305953642101}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offsetLimits: {x: -0.05, y: 0.8}
-  animalScaleMaterial: {fileID: 8681027702475832726}
-  animalRuler: {fileID: 8657808734710476654}
+  animalScaleMaterial: {fileID: 1128748475593155725}
+  animalRuler: {fileID: 1149998305953642101}
   currentEnvironment: {fileID: 0}
   originalParentOfFirstHandTransform: {fileID: 0}
   secondObjectGrabbed: {fileID: 0}
@@ -57,10 +57,14 @@ MonoBehaviour:
   - {fileID: 0}
   isDoubleGrabbing: 0
   pivotRootTransform: {fileID: 0}
-  doubleGrabRotationTransform: {fileID: 0}
-  handParentForContainerPlacement: {fileID: 0}
   doubleGrabRotateCoordinate: {fileID: 0}
   isInitialDoubleGrab: 0
+  orientedPlayer: {x: 0, y: 0, z: 0}
+  orientedPlayerTest: {fileID: 0}
+  rotationToRotateTo: {x: 0, y: 0, z: 0, w: 0}
+  initialY: 0
+  initialXRY: 0
+  desktopCamera: {fileID: 0}
 --- !u!120 &4935357643860465841
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -159,7 +163,7 @@ LineRenderer:
     generateLightingData: 0
   m_UseWorldSpace: 1
   m_Loop: 0
---- !u!1001 &4935357644177777133
+--- !u!1001 &3724129246036261110
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -228,15 +232,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: daf0403643072614da0823f12f723b9b, type: 3}
---- !u!4 &8657808734710476654 stripped
+--- !u!4 &1149998305953642101 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4349173823246470787, guid: daf0403643072614da0823f12f723b9b,
     type: 3}
-  m_PrefabInstance: {fileID: 4935357644177777133}
+  m_PrefabInstance: {fileID: 3724129246036261110}
   m_PrefabAsset: {fileID: 0}
---- !u!23 &8681027702475832726 stripped
+--- !u!23 &1128748475593155725 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 4324824618001767547, guid: daf0403643072614da0823f12f723b9b,
     type: 3}
-  m_PrefabInstance: {fileID: 4935357644177777133}
+  m_PrefabInstance: {fileID: 3724129246036261110}
   m_PrefabAsset: {fileID: 0}
