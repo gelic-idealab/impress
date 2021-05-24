@@ -64,7 +64,7 @@ namespace Komodo.IMPRESS
 
         private float currentScale = 1;
 
-        float scaleRatio = 1;
+        float scale = 1;
         
         public Transform desktopCamera;
 
@@ -140,15 +140,13 @@ namespace Komodo.IMPRESS
             }
         }
 
-        public float ComputeNewScaleRatio () 
+        public float ComputeNewScale () 
         {
-            var handDistance = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
+            var currentHandDistance = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
 
-            scaleRatio = (handDistance / (xrPlayer.localScale.x * initialHandDistance));
+            scale = (initialHandDistance / currentHandDistance ) * (xrPlayer.localScale.x * initialPlayerScale.x);
 
-            scaleRatio *= initialPlayerScale.x;
-
-            return scaleRatio;
+            return scale;
         }
 
         public void UpdateRotation (float scaleClamp2) 
@@ -186,7 +184,7 @@ namespace Komodo.IMPRESS
             //grab values to know how we should start affecting our object 
             initialHandDistance = Vector3.Distance(hands[0].position, hands[1].position);
 
-            initialPlayerScale = xrPlayer.localScale.x * (Vector3.one * scaleRatio);
+            initialPlayerScale = xrPlayer.localScale.x * (Vector3.one * scale);
 
             var initialHandDistance2 = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
 
@@ -223,7 +221,7 @@ namespace Komodo.IMPRESS
 
             // Scale
 
-            float newScaleRatio = ComputeNewScaleRatio();
+            float newScaleRatio = ComputeNewScale();
 
             UpdateRulerValue(newScaleRatio);
 
