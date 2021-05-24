@@ -10,8 +10,9 @@ namespace Komodo.IMPRESS
 {
     public class TiltBrushTeleport : MonoBehaviour, IUpdatable
     {
+        public float scaleMin = 0.835f;
 
-        public Vector2 offsetLimits = new Vector2(-0.05f, 0.8f);
+        public float scaleMax = 1.94f;
 
         public MeshRenderer animalRulerMesh;
 
@@ -142,6 +143,16 @@ namespace Komodo.IMPRESS
 
             scale = (initialHandDistance / currentHandDistance ) * (xrPlayer.localScale.x * initialPlayerScale.x);
 
+            if (scale < scaleMin) 
+            {
+                return scaleMin;
+            }
+
+            if (scale > scaleMax) 
+            {
+                return scaleMax;
+            }
+
             return scale;
         }
 
@@ -171,11 +182,20 @@ namespace Komodo.IMPRESS
             handToHandLine.SetPosition(1, hands[1].transform.position);
         }
 
+        public float ComputeRulerValue (float playerScale) 
+        {
+            return ((playerScale - 0.9f) / 1.3f);
+        }
+
         public void UpdateRulerValue (float newScaleRatio)
         {
-            var rulerValue = ((newScaleRatio - 0.9f) / 1.3f);
+            var rulerValue = ComputeRulerValue(newScaleRatio);
 
-            animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, offsetLimits.x, offsetLimits.y), 0));
+            float min = ComputeRulerValue(scaleMin);
+
+            float max = ComputeRulerValue(scaleMax);
+
+            animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, min, max), 0));
         }
 
         public void UpdateInitialValues ()
