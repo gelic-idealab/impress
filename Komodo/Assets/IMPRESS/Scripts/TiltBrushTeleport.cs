@@ -38,8 +38,6 @@ namespace Komodo.IMPRESS
 
         private Vector3 initialPlayerScale = Vector3.one;
 
-        private Quaternion initialPlayerRotation;
-
         public Action onDoubleTriggerPress;
 
         public Action onDoubleTriggerRelease;
@@ -52,11 +50,9 @@ namespace Komodo.IMPRESS
 
         public GameObject orientedPlayerTest;
 
-        public float initialY;
+        public float initialHandsRotationY;
 
-        public float initialXRY;
-
-        Quaternion initialRotation;
+        Quaternion initialPlayerRotation;
 
         Quaternion invertedRot;
 
@@ -151,9 +147,11 @@ namespace Komodo.IMPRESS
 
             pivotPoint1.rotation = Quaternion.LookRotation(hand1MinusHand0, Vector3.up);
 
-            float rotateAmount = (pivotPoint1.localEulerAngles.y - initialY);
+            var currentHandsRotationY = pivotPoint1.localEulerAngles.y;
+
+            float rotateAmount = initialHandsRotationY - currentHandsRotationY;
             
-            xrPlayer.localRotation = Quaternion.AngleAxis(rotateAmount, Vector3.up) * initialRotation;
+            xrPlayer.localRotation = initialPlayerRotation * Quaternion.AngleAxis(rotateAmount, Vector3.up);
         }
 
         public void UpdateRulerPose (float scale)
@@ -169,7 +167,6 @@ namespace Komodo.IMPRESS
 
         public void UpdateRulerValue (float newScaleRatio)
         {
-
             var rulerValue = ((newScaleRatio - 0.9f) / 1.3f);
 
             animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, offsetLimits.x, offsetLimits.y), 0));
@@ -177,20 +174,21 @@ namespace Komodo.IMPRESS
 
         public void UpdateInitialValues ()
         {
-            //grab values to know how we should start affecting our object 
-            initialHandDistance = Vector3.Distance(hands[0].position, hands[1].position);
 
             initialPlayerScale = xrPlayer.localScale.x * (Vector3.one * scale);
+
+            initialPlayerRotation = xrPlayer.localRotation * Quaternion.Inverse(xrPlayer.localRotation);
+
+            //grab values to know how we should start affecting our object 
+            initialHandDistance = Vector3.Distance(hands[0].position, hands[1].position);
 
             var initialHandDistance2 = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
 
             pivotPoint1.position = hands[0].transform.position; 
             
             pivotPoint1.rotation = Quaternion.LookRotation(xrPlayer.InverseTransformPoint(hands[1].transform.position - hands[0].transform.position), Vector3.up);
-
-            initialRotation = xrPlayer.localRotation * Quaternion.Inverse(xrPlayer.localRotation);
             
-            initialY = pivotPoint1.localEulerAngles.y;
+            initialHandsRotationY = pivotPoint1.localEulerAngles.y;
         }
 
         public void OnUpdate(float realltime)
