@@ -246,7 +246,7 @@ namespace Komodo.IMPRESS
 
             if (float.IsNaN(currentEnvironment.localScale.y)) 
             {
-                return;
+                throw new System.Exception("Current Environment Local Scale Y was NaN");
             }
 
             var scaleClamp2 = Mathf.Clamp(newScale, 0.35f, 5f);
