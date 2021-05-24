@@ -38,8 +38,10 @@ namespace Komodo.IMPRESS
 
         private Vector3 initialPlayerScale = Vector3.one;
 
+        // Connect this action as a callback in Unity.
         public Action onDoubleTriggerPress;
 
+        // Connect this action as a callback in Unity.
         public Action onDoubleTriggerRelease;
 
         Transform player;
@@ -103,6 +105,8 @@ namespace Komodo.IMPRESS
         [ContextMenu("Start World Pulling")]
         public void StartWorldPulling()
         {
+            Debug.Log("Starting world pulling");
+
             didUpdateInitialValues = false;
 
             animalRuler.gameObject.SetActive(true);
@@ -119,6 +123,8 @@ namespace Komodo.IMPRESS
         [ContextMenu("Stop World Pulling")]
         public void StopWorldPulling()
         {
+            Debug.Log("Stopping world pulling");
+
             animalRuler.gameObject.SetActive(false);
 
             handToHandLine.enabled = false;
