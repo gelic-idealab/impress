@@ -243,7 +243,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1634763512}
         m_TargetAssemblyTypeName: Komodo.IMPRESS.TiltBrushTeleport, Komodo.IMPRESS
-        m_MethodName: SetDoubleTriggerStateOn
+        m_MethodName: StartWorldPulling
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -258,7 +258,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1634763512}
         m_TargetAssemblyTypeName: Komodo.IMPRESS.TiltBrushTeleport, Komodo.IMPRESS
-        m_MethodName: SetDoubleTriggerStateOff
+        m_MethodName: StopWorldPulling
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3065,6 +3065,11 @@ PrefabInstance:
       propertyPath: onRightFlick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: Komodo.Runtime.FreeFlightController, Komodo.Runtime
       objectReference: {fileID: 0}
+    - target: {fileID: 3937505055289727901, guid: 902f99f70120d7244bd78f1f2d514d81,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.8
+      objectReference: {fileID: 0}
     - target: {fileID: 3940303654870064637, guid: 902f99f70120d7244bd78f1f2d514d81,
         type: 3}
       propertyPath: m_Name
@@ -3531,12 +3536,12 @@ PrefabInstance:
     - target: {fileID: 252280554555801501, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 252280554555801501, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 252280554555801501, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
@@ -3551,17 +3556,17 @@ PrefabInstance:
     - target: {fileID: 252280554555801501, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 490.6908
+      value: 632.0377
       objectReference: {fileID: 0}
     - target: {fileID: 1134671696996870667, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1134671696996870667, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1134671696996870667, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
@@ -3576,7 +3581,7 @@ PrefabInstance:
     - target: {fileID: 1134671696996870667, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 245.2763
+      value: 301.8151
       objectReference: {fileID: 0}
     - target: {fileID: 1134671697292426588, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
@@ -3751,12 +3756,12 @@ PrefabInstance:
     - target: {fileID: 1134671697976105439, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1134671697976105439, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1134671697976105439, guid: dba87770ed895744a91aae259e6631f7,
         type: 3}

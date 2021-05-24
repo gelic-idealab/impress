@@ -14,6 +14,26 @@ namespace Komodo.IMPRESS
 
         public float scaleMax = 1.94f;
 
+        public struct UpdatingValue<T>
+        {
+            public UpdatingValue(T initial)
+            {
+                Initial = initial;
+
+                Current = initial;
+            }
+            
+            public T Initial { get; }
+
+            public T Current { get; set; }
+        }
+
+        private UpdatingValue<float> playerLocalScaleX;
+        
+        private UpdatingValue<float> handDistance;
+        
+        private UpdatingValue<float> handsRotationY;
+
         public MeshRenderer animalRulerMesh;
 
         private LineRenderer handToHandLine;
@@ -31,13 +51,9 @@ namespace Komodo.IMPRESS
         public Transform pivotPointsParent;
 
         //coordinate system to use to tilt double grand object appropriately: pulling, pushing, hand lift, and hand lower
-        public Transform pivotPoint1;
+        public Transform pivotPoint0;
         
-        public bool didUpdateInitialValues;
-        
-        private float initialHandDistance;
-
-        private Vector3 initialPlayerScale = Vector3.one;
+        public bool doUpdateInitialValues;
 
         // Connect this action as a callback in Unity.
         public Action onDoubleTriggerPress;
@@ -53,15 +69,11 @@ namespace Komodo.IMPRESS
 
         public GameObject orientedPlayerTest;
 
-        public float initialHandsRotationY;
-
         Quaternion initialPlayerRotation;
 
         Quaternion invertedRot;
 
-        private float currentScale = 1;
-
-        float scale = 1;
+        public float initialScale = 1;
         
         public Transform desktopCamera;
 
@@ -69,10 +81,10 @@ namespace Komodo.IMPRESS
         {
             //create hierarchy to rotate double grab objects appropriately
             //create root parent and share it through scripts by setting it to a static field
-            pivotPointsParent = new GameObject("PIVOT_ROOT").transform;
+            pivotPointsParent = new GameObject("PivotPoints").transform;
 
             //construct coordinate system to reference for tilting double grab object 
-            pivotPoint1 = new GameObject("DoubleGrabCoordinateForObjectTilt").transform;
+            pivotPoint0 = new GameObject("PivotPoint1").transform;
         }
 
         public void Start()
@@ -108,7 +120,7 @@ namespace Komodo.IMPRESS
         {
             Debug.Log("Starting world pulling");
 
-            didUpdateInitialValues = false;
+            doUpdateInitialValues = true;
 
             animalRuler.gameObject.SetActive(true);
 
@@ -137,39 +149,58 @@ namespace Komodo.IMPRESS
             }
         }
 
-        public float ComputeClampedScale () 
+        protected void UpdateInitialValues ()
         {
-            var currentHandDistance = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
+            playerLocalScaleX = new UpdatingValue<float>(xrPlayer.localScale.x * initialScale);
 
-            scale = (initialHandDistance / currentHandDistance ) * (xrPlayer.localScale.x * initialPlayerScale.x);
+            initialPlayerRotation = xrPlayer.localRotation * Quaternion.Inverse(xrPlayer.localRotation);
 
-            return Mathf.Clamp(scale, scaleMin, scaleMax);
+            //grab values to know how we should start affecting our object 
+            handDistance = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position));
+
+            pivotPoint0.position = hands[0].transform.position; 
+            
+            pivotPoint0.rotation = Quaternion.LookRotation(xrPlayer.InverseTransformPoint(hands[1].transform.position - hands[0].transform.position), Vector3.up);
+            
+            handsRotationY = new UpdatingValue<float>(pivotPoint0.localEulerAngles.y);
         }
 
-        public void UpdateRotation (float scaleClamp2) 
+        public float ComputeScale (UpdatingValue<float> handDistance, UpdatingValue<float> playerLocalScaleX) 
         {
-            pivotPoint1.position = hands[0].transform.position;
+            return (handDistance.Initial / handDistance.Current ) * (playerLocalScaleX.Initial * playerLocalScaleX.Current);
+        }
 
-            Vector2 hand1MinusHand0 = xrPlayer.InverseTransformPoint(hands[1].transform.position - hands[0].transform.position);
+        public float ComputeRotationAmount (UpdatingValue<float> handsRotationY)
+        {
+            return handsRotationY.Initial - handsRotationY.Current;
+        }
 
-            pivotPoint1.rotation = Quaternion.LookRotation(hand1MinusHand0, Vector3.up);
+        public void UpdatePivotPoint (Transform pivotPoint, Vector3 hand0Position, Vector3 hand1Position)
+        {
+            pivotPoint.position = hand0Position;
 
-            var currentHandsRotationY = pivotPoint1.localEulerAngles.y;
+            Vector2 hand1MinusHand0 = xrPlayer.InverseTransformPoint(hand0Position - hand1Position);
 
-            float rotateAmount = initialHandsRotationY - currentHandsRotationY;
-            
+            pivotPoint.rotation = Quaternion.LookRotation(hand1MinusHand0, Vector3.up);
+        }
+
+        public void UpdatePlayerRotation (float rotateAmount) 
+        {
             xrPlayer.localRotation = initialPlayerRotation * Quaternion.AngleAxis(rotateAmount, Vector3.up);
         }
 
-        public void UpdateRulerPose (float scale)
+        public void UpdateRulerPose (Vector3 hand0Position, Vector3 hand1Position, float scale)
         {
-            animalRuler.position = ((hands[1].transform.position + hands[0].transform.position) / 2);
+            animalRuler.position = ((hand0Position + hand1Position) / 2);
 
             animalRuler.localScale = Vector3.one * scale;
+        }
 
-            handToHandLine.SetPosition(0, hands[0].transform.position);
+        public void UpdateHandToHandLineEndpoints (Vector3 hand0Position, Vector3 hand1Position) 
+        {
+            handToHandLine.SetPosition(0, hand0Position);
 
-            handToHandLine.SetPosition(1, hands[1].transform.position);
+            handToHandLine.SetPosition(1, hand1Position);
         }
 
         public float ComputeRulerValue (float playerScale) 
@@ -188,25 +219,6 @@ namespace Komodo.IMPRESS
             animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, min, max), 0));
         }
 
-        public void UpdateInitialValues ()
-        {
-
-            initialPlayerScale = xrPlayer.localScale.x * (Vector3.one * scale);
-
-            initialPlayerRotation = xrPlayer.localRotation * Quaternion.Inverse(xrPlayer.localRotation);
-
-            //grab values to know how we should start affecting our object 
-            initialHandDistance = Vector3.Distance(hands[0].position, hands[1].position);
-
-            var initialHandDistance2 = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
-
-            pivotPoint1.position = hands[0].transform.position; 
-            
-            pivotPoint1.rotation = Quaternion.LookRotation(xrPlayer.InverseTransformPoint(hands[1].transform.position - hands[0].transform.position), Vector3.up);
-            
-            initialHandsRotationY = pivotPoint1.localEulerAngles.y;
-        }
-
         public void OnUpdate(float realltime)
         {
             if (!currentEnvironment)
@@ -219,18 +231,24 @@ namespace Komodo.IMPRESS
                 xrPlayer = GameObject.FindGameObjectWithTag("XRCamera").transform;
             }
 
-            if (didUpdateInitialValues == false)
+            if (doUpdateInitialValues == true)
             {
                 UpdateInitialValues();
 
-                didUpdateInitialValues = true;
+                doUpdateInitialValues = false;
 
                 return;
             }
 
             // Scale
 
-            float newScale = ComputeClampedScale();
+            handDistance.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
+
+            playerLocalScaleX.Current = xrPlayer.localScale.x;
+
+            float newScale = ComputeScale(handDistance, playerLocalScaleX);
+
+            newScale = Mathf.Clamp(newScale, scaleMin, scaleMax);
 
             UpdateRulerValue(newScale);
 
@@ -243,9 +261,17 @@ namespace Komodo.IMPRESS
 
             // Rotation
 
-            UpdateRotation(newScale);
+            UpdatePivotPoint(pivotPoint0, hands[0].transform.position, hands[1].transform.position);
+            
+            handsRotationY.Current = pivotPoint0.localEulerAngles.y;
 
-            UpdateRulerPose(newScale);
+            float rotateAmount = ComputeRotationAmount(handsRotationY);
+
+            UpdatePlayerRotation(rotateAmount);
+
+            UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, newScale);
+
+            UpdateHandToHandLineEndpoints(hands[0].transform.position, hands[1].transform.position);
         }
     }
 }
