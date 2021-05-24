@@ -137,23 +137,13 @@ namespace Komodo.IMPRESS
             }
         }
 
-        public float ComputeNewScale () 
+        public float ComputeClampedScale () 
         {
             var currentHandDistance = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
 
             scale = (initialHandDistance / currentHandDistance ) * (xrPlayer.localScale.x * initialPlayerScale.x);
 
-            if (scale < scaleMin) 
-            {
-                return scaleMin;
-            }
-
-            if (scale > scaleMax) 
-            {
-                return scaleMax;
-            }
-
-            return scale;
+            return Mathf.Clamp(scale, scaleMin, scaleMax);
         }
 
         public void UpdateRotation (float scaleClamp2) 
@@ -240,7 +230,7 @@ namespace Komodo.IMPRESS
 
             // Scale
 
-            float newScale = ComputeNewScale();
+            float newScale = ComputeClampedScale();
 
             UpdateRulerValue(newScale);
 
@@ -249,15 +239,13 @@ namespace Komodo.IMPRESS
                 throw new System.Exception("Current Environment Local Scale Y was NaN");
             }
 
-            var scaleClamp2 = Mathf.Clamp(newScale, 0.35f, 5f);
-
-            teleportPlayer.UpdatePlayerScale(scaleClamp2);
+            teleportPlayer.UpdatePlayerScale(newScale);
 
             // Rotation
 
-            UpdateRotation(scaleClamp2);
+            UpdateRotation(newScale);
 
-            UpdateRulerPose(scaleClamp2);
+            UpdateRulerPose(newScale);
         }
     }
 }
