@@ -1,0 +1,77 @@
+using System.Collections.Generic;
+using UnityEngine;
+using Komodo.Utilities;
+
+public class LinkedGroup : MonoBehaviour
+{
+    public  List<Collider> groupListCollection;
+    private Transform rootParent;
+    public Transform parentOfCollection;
+
+    public GameObject currentLinkBoundingBox;
+    public MeshRenderer meshRend;
+
+    //show our link bounding box when having our link button on
+    public void SetEnable()
+    {
+        if (currentLinkBoundingBox)
+        {
+            currentLinkBoundingBox.GetComponent<MeshRenderer>().enabled = true;
+        }
+    }
+    public void SetOnDisable()
+    {
+        if (currentLinkBoundingBox)
+        {
+            currentLinkBoundingBox.GetComponent<MeshRenderer>().enabled = false;
+        }
+    }
+    public void RefreshLinkedGroup()
+    {
+        List<Transform> childList = new List<Transform>();
+        rootParent = transform;
+        parentOfCollection = transform.GetChild(0);
+
+
+        Bounds newBound = default;
+        if(groupListCollection.Count != 0 )
+        newBound = new Bounds(groupListCollection[0].transform.position, Vector3.one * 0.02f);// new Bounds();
+
+        for (int i = 0; i < rootParent.GetChild(0).childCount; i++)
+        {
+            childList.Add(parentOfCollection.GetChild(i));
+
+            var col = parentOfCollection.GetChild(i).GetComponent<Collider>();//capturedObjects[i];//uniqueIdToParentofLinks[currentIDworkingWith].collectedColliders[i];
+
+            //set new collider bounds
+            newBound.Encapsulate(new Bounds(col.transform.position, col.bounds.size));
+
+           
+        }
+
+        rootParent.transform.DetachChildren();
+        parentOfCollection.transform.DetachChildren();
+
+        rootParent.position = newBound.center;//newLinkParentCollider.transform.position;
+        rootParent.SetGlobalScale(newBound.size);
+
+        var prevRot = transform.rotation;
+        rootParent.rotation = Quaternion.identity;
+
+        parentOfCollection.rotation = Quaternion.identity;
+
+        if (rootParent.TryGetComponent(out Collider boxCollider))
+            Destroy(boxCollider);
+
+        rootParent.gameObject.AddComponent<BoxCollider>();
+
+        foreach (var item in childList)
+            item.transform.SetParent(parentOfCollection.transform, true);
+
+
+        parentOfCollection.transform.SetParent(rootParent.transform, true);
+
+    }
+
+
+}
