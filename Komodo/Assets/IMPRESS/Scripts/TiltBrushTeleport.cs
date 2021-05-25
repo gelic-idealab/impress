@@ -187,9 +187,15 @@ namespace Komodo.IMPRESS
         {
             pivotPoint.position = hand0Position;
 
-            Vector2 hand1MinusHand0 = xrPlayer.InverseTransformPoint(hand1Position - hand0Position);
+            Vector3 deltaHandPositionsXZ = new Vector3(
+                (hand1Position - hand0Position).x,
+                0,
+                (hand1Position - hand0Position).z
+            );
 
-            pivotPoint.rotation = Quaternion.LookRotation(hand1MinusHand0, Vector3.up);
+            Vector3 deltaHandPositionsXZLocal = xrPlayer.InverseTransformDirection(deltaHandPositionsXZ);
+
+            pivotPoint.localRotation = Quaternion.LookRotation(deltaHandPositionsXZLocal, Vector3.up);
         }
 
         public void UpdatePlayerRotation (float rotateAmount) 
