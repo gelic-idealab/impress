@@ -14,6 +14,9 @@ namespace Komodo.IMPRESS
 
         public float scaleMax = 1.94f;
 
+        public GameObject debugAxes;
+
+        [Serializable]
         public struct UpdatingValue<T>
         {
             public UpdatingValue(T initial)
@@ -28,10 +31,13 @@ namespace Komodo.IMPRESS
             public T Current { get; set; }
         }
 
+        [SerializeField]
         private UpdatingValue<float> playerLocalScaleX;
         
+        [SerializeField]
         private UpdatingValue<float> handDistance;
         
+        [SerializeField]
         private UpdatingValue<float> handsRotationY;
 
         public MeshRenderer animalRulerMesh;
@@ -71,11 +77,7 @@ namespace Komodo.IMPRESS
 
         Quaternion initialPlayerRotation;
 
-        Quaternion invertedRot;
-
         public float initialScale = 1;
-        
-        public Transform desktopCamera;
 
         public void Awake()
         {
@@ -89,6 +91,14 @@ namespace Komodo.IMPRESS
 
         public void Start()
         {
+            var _debugAxes = Instantiate(debugAxes);
+
+            _debugAxes.transform.parent = pivotPoint0;
+
+            _debugAxes.transform.localPosition = Vector3.zero;
+
+            _debugAxes.transform.localRotation = Quaternion.identity;
+
             player = GameObject.FindGameObjectWithTag("Player").transform;
 
             if (player)
@@ -158,9 +168,7 @@ namespace Komodo.IMPRESS
             //grab values to know how we should start affecting our object 
             handDistance = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position));
 
-            pivotPoint0.position = hands[0].transform.position; 
-            
-            pivotPoint0.rotation = Quaternion.LookRotation(xrPlayer.InverseTransformPoint(hands[1].transform.position - hands[0].transform.position), Vector3.up);
+            UpdatePivotPoint(pivotPoint0, hands[0].transform.position, hands[1].transform.position);
             
             handsRotationY = new UpdatingValue<float>(pivotPoint0.localEulerAngles.y);
         }
@@ -179,7 +187,7 @@ namespace Komodo.IMPRESS
         {
             pivotPoint.position = hand0Position;
 
-            Vector2 hand1MinusHand0 = xrPlayer.InverseTransformPoint(hand0Position - hand1Position);
+            Vector2 hand1MinusHand0 = xrPlayer.InverseTransformPoint(hand1Position - hand0Position);
 
             pivotPoint.rotation = Quaternion.LookRotation(hand1MinusHand0, Vector3.up);
         }
