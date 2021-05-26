@@ -24,7 +24,6 @@ namespace Komodo.IMPRESS{
                 netReg.gameObject.SetActive(false);
 
                 CreatePrimitiveManager.Instance.SendPrimitiveNetworkUpdate(entityID, -9);
-                //   DrawingInstanceManager.Instance.SendStrokeNetworkUpdate(entityID, Entity_Type.LineNotRender);
 
                 ////save our reverted action for undoing the process with the undo button
                 if (UndoRedoManager.IsAlive)
@@ -33,7 +32,6 @@ namespace Komodo.IMPRESS{
                         netReg.gameObject.SetActive(true);
 
                         CreatePrimitiveManager.Instance.SendPrimitiveNetworkUpdate(entityID, 9);
-                    //    DrawingInstanceManager.Instance.SendStrokeNetworkUpdate(entityID, Entity_Type.LineRender);
                 }
                     );
             }

@@ -78,11 +78,8 @@ namespace Komodo.IMPRESS
                 toggleGroup = mUIRef.primitiveToggleListParent.GetComponentInChildren<ToggleGroup>(true);
 
 
-                //set links
-                //for (int i = 0; i < primitivesToDisplayParent.transform.childCount; i++)
-                //{
-                //    toggleButtons[i].onValueChanged.AddListener((bool state) => { UpdateCurrentToggleOn(state); DeactivateAllChildren(); primitivesToDisplayParent.GetChild(i).gameObject.SetActive(true); });
-                //}
+            
+                //sphere
                 toggleButtons[0].onValueChanged.AddListener((bool state) => { UpdateCurrentToggleOn(state); DeactivateAllChildren(); primitivesToDisplayParent.GetChild(0).gameObject.SetActive(true); });
                 toggleButtons[1].onValueChanged.AddListener((bool state) => { UpdateCurrentToggleOn(state); DeactivateAllChildren(); primitivesToDisplayParent.GetChild(1).gameObject.SetActive(true); });
                 toggleButtons[2].onValueChanged.AddListener((bool state) => { UpdateCurrentToggleOn(state); DeactivateAllChildren(); primitivesToDisplayParent.GetChild(2).gameObject.SetActive(true); });
@@ -93,15 +90,6 @@ namespace Komodo.IMPRESS
 
                 mUIRef.primitiveButton.onFirstClick.AddListener(() => { primitivesToDisplayParent.gameObject.SetActive(true); primitiveHandTrigger.gameObject.SetActive(true); });
                 mUIRef.primitiveButton.onSecondClick.AddListener(() => { primitivesToDisplayParent.gameObject.SetActive(false); primitiveHandTrigger.gameObject.SetActive(false); });
-
-
-                //foreach (var item in primitivesToDisplayParent.transform)
-                //{
-                ////    sphereToggle.onValueChanged.AddListener((bool state) => { UpdateCurrentToggleOn(state); DeactivateAllChildren(); parentOfPrimitiveObjectsToDisplay.GetChild(0).gameObject.SetActive(true); });
-                //}
-
-
-
 
 
 
@@ -130,15 +118,12 @@ namespace Komodo.IMPRESS
             var rot = Quaternion.identity;
             var scale = Vector3.one * 0.2f;
 
-            //foreach (var toggle in toggleButtons)
-            //{
             for (int i = 0; i < toggleButtons.Length; i++)
             {
 
                 if (currentToggle.GetInstanceID() == toggleButtons[i].GetInstanceID())
                 {
                     //var vals = Enum.GetValues(typeof(PrimitiveType));
-
                     if(0 == i)
                     currentPrimitiveType = PrimitiveType.Sphere;
                     else if(1 == i)
@@ -255,8 +240,7 @@ namespace Komodo.IMPRESS
 
       
 
-            //for (int i = 0; i < toggleButtons.Length; i++)
-            //{
+        
                 switch (newData.primitiveType)
                 {
                     case 0:
