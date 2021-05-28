@@ -19,6 +19,7 @@ TagManager:
   - CameraSet
   - DesktopCamera
   - Drawing
+  - PlayerSpawnCenter
   layers:
   - Default
   - TransparentFX
