@@ -45,9 +45,6 @@ namespace Komodo.IMPRESS
         private LineRenderer handToHandLine;
 
         public Transform animalRuler;
-
-        //check for left hand grabbing
-        public Transform currentEnvironment;
         
         //get parent if we are switching objects between hands we want to keep track of were to place it back, to avoid hierachy parenting displacement
         public Transform originalParentOfFirstHandTransform;
@@ -72,8 +69,6 @@ namespace Komodo.IMPRESS
         Transform xrPlayer;
 
         TeleportPlayer teleportPlayer;
-
-        public GameObject orientedPlayerTest;
 
         Quaternion initialPlayerRotation;
 
@@ -235,11 +230,6 @@ namespace Komodo.IMPRESS
 
         public void OnUpdate(float realltime)
         {
-            if (!currentEnvironment)
-            {
-                currentEnvironment = orientedPlayerTest.transform;
-            }
-
             if (xrPlayer == null)
             {
                 xrPlayer = GameObject.FindGameObjectWithTag("XRCamera").transform;
@@ -265,11 +255,6 @@ namespace Komodo.IMPRESS
             newScale = Mathf.Clamp(newScale, scaleMin, scaleMax);
 
             UpdateRulerValue(newScale);
-
-            if (float.IsNaN(currentEnvironment.localScale.y)) 
-            {
-                throw new System.Exception("Current Environment Local Scale Y was NaN");
-            }
 
             teleportPlayer.UpdatePlayerScale(newScale);
 
