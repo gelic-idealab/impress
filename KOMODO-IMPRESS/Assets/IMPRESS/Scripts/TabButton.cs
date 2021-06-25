@@ -5,12 +5,11 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-namespace Komodo.IMPRESS 
+namespace Komodo.IMPRESS
 {
     [RequireComponent(typeof(Image))]
     public class TabButton : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler, IPointerExitHandler
     {
-
         public TabManager tabManager;
 
         public Image background;
@@ -25,25 +24,25 @@ namespace Komodo.IMPRESS
         {
             tabManager.OnTabToggled(this);
         }
-        
+
         public void OnPointerEnter(PointerEventData eventData)
         {
             tabManager.OnTabEnter(this);
         }
-        
+
         public void OnPointerExit(PointerEventData eventData)
         {
             tabManager.OnTabExit(this);
         }
 
-        void Start () 
+        void Start ()
         {
             background = GetComponent<Image>();
 
             tabManager.Subscribe(this);
         }
 
-        public void Select () 
+        public void Select ()
         {
             onTabSelected.Invoke();
         }
