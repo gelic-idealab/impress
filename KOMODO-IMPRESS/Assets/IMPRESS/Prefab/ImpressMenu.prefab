@@ -4286,7 +4286,7 @@ MonoBehaviour:
   buttonTemplate: {fileID: 1155860353542352, guid: a9865c62c8c91b349bcaefbb191d8b0f,
     type: 3}
   transformToPlaceButtonUnder: {fileID: 7413780832299290199}
-  sceneList: {fileID: 0}
+  sceneList: {fileID: 11400000, guid: 4ba2165a8d932094b8b0e13ea97cac78, type: 2}
   scene_Additives_Loaded: []
 --- !u!1 &6584004355828473280
 GameObject:
@@ -10418,7 +10418,8 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -12.5
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1183172433843693882, guid: d33cf533d5183984ea5c8045f7f3620b, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: d33cf533d5183984ea5c8045f7f3620b, type: 3}
 --- !u!224 &4890615312982106430 stripped
 RectTransform:

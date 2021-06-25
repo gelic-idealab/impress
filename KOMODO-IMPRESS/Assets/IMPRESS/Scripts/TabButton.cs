@@ -39,6 +39,11 @@ namespace Komodo.IMPRESS
         {
             background = GetComponent<Image>();
 
+            if (tabManager == null) 
+            {
+                throw new System.NullReferenceException("tabManager");
+            }
+
             tabManager.Subscribe(this);
         }
 

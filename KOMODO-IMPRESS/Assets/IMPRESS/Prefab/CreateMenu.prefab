@@ -5098,7 +5098,6 @@ GameObject:
   - component: {fileID: 5066473466511348338}
   - component: {fileID: 5066473466511348333}
   - component: {fileID: 8969758567934479331}
-  - component: {fileID: 1183172433843693882}
   - component: {fileID: 2250371019630375396}
   m_Layer: 5
   m_Name: Erase
@@ -5268,27 +5267,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &1183172433843693882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5066473466511348335}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cff52261bd6d2f74291667fcf29930eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tabManager: {fileID: 0}
-  background: {fileID: 0}
-  onTabSelected:
-    m_PersistentCalls:
-      m_Calls: []
-  onTabDeselected:
-    m_PersistentCalls:
-      m_Calls: []
-  objects: []
 --- !u!114 &2250371019630375396
 MonoBehaviour:
   m_ObjectHideFlags: 0
