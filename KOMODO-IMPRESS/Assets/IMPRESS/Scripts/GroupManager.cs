@@ -35,7 +35,7 @@ namespace Komodo.IMPRESS
             var initManager = Instance;
 
 
-            if (GameObject.FindGameObjectWithTag("MenuUI").TryGetComponent(out MainUIIMPRESSReferences uiRef))
+            if (GameObject.FindGameObjectWithTag("MenuUI").TryGetComponent(out ImpressEventManager uiRef))
             {
                 uiRef.groupButton.onFirstClick.AddListener(() => SetAllGroupsToRender());
                 uiRef.groupButton.onSecondClick.AddListener(() => SetAllGroupsToNOTRender());

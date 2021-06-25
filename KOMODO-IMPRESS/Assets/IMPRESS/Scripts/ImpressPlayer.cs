@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace Komodo.IMPRESS
 {
-    public class PlayerIMPRESSReferences : MonoBehaviour
+    public class ImpressPlayer : MonoBehaviour
     {
         public TriggerCreatePrimitive leftShapeTrigger;
-        public TriggerLink leftTriggerLink;
-        public TriggerUnlink leftTriggerUnLink;
+        public TriggerLink leftTriggerGroup;
+        public TriggerUnlink leftTriggerUngroup;
     }
 }
