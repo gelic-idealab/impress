@@ -29,14 +29,14 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - PostProcessing
+  - Walkable
+  - Interaction
+  - Hand
+  - UI_Selector
+  - Physics Object
+  - Teleportation_Selector
+  - DESKTOP_UI_IGNORE
   - 
   - 
   - 
