@@ -1,0 +1,1 @@
+[The custom space skybox](http://wwwtyro.github.io/space-3d/#animationSpeed=1.5579772535320988&fov=80&nebulae=true&pointStars=true&resolution=1024&seed=3jzcrh756700&stars=true&sun=false) is by wwwtryo on GitHub.
