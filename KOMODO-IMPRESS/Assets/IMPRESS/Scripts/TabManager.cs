@@ -2,13 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-namespace Komodo.IMPRESS 
+namespace Komodo.IMPRESS
 {
     public class TabManager : MonoBehaviour
     {
-
-        List<TabButton> tabButtons;
+        private List<TabButton> _tabButtons;
 
         public Sprite tabIdle;
 
@@ -20,22 +18,27 @@ namespace Komodo.IMPRESS
 
         private TabButton _selectedTab;
 
-        public void Subscribe (TabButton tab) 
+        public void Start ()
         {
-
-            if (tabButtons == null)
-            {
-                tabButtons = new List<TabButton>();
-            }
-
-            tabButtons.Add(tab);
+            ResetTabs();
         }
 
-        public void OnTabEnter (TabButton tab) 
+        public void Subscribe (TabButton tab)
+        {
+
+            if (_tabButtons == null)
+            {
+                _tabButtons = new List<TabButton>();
+            }
+
+            _tabButtons.Add(tab);
+        }
+
+        public void OnTabEnter (TabButton tab)
         {
             ResetTabs();
 
-            if (_selectedTab == tab) 
+            if (_selectedTab == tab)
             {
                 tab.background.sprite = tabHoverActive;
 
@@ -45,11 +48,11 @@ namespace Komodo.IMPRESS
             tab.background.sprite = tabHover;
         }
 
-        public void OnTabExit (TabButton tab) 
+        public void OnTabExit (TabButton tab)
         {
             ResetTabs();
 
-            if (_selectedTab == tab) 
+            if (_selectedTab == tab)
             {
                 tab.background.sprite = tabActive;
 
@@ -59,10 +62,10 @@ namespace Komodo.IMPRESS
             tab.background.sprite = tabIdle;
         }
 
-        public void OnTabToggled (TabButton tab) 
+        public void OnTabToggled (TabButton tab)
         {
-            if (_selectedTab == tab) {
-
+            if (_selectedTab == tab)
+            {
                 _selectedTab.Deselect();
 
                 _selectedTab = null;
@@ -83,11 +86,11 @@ namespace Komodo.IMPRESS
             tab.background.sprite = tabActive;
         }
 
-        public void ResetTabs () 
+        public void ResetTabs ()
         {
-            foreach (TabButton tab in tabButtons)
+            foreach (TabButton tab in _tabButtons)
             {
-                if (tab != _selectedTab) 
+                if (tab != _selectedTab)
                 {
                     tab.background.sprite = tabIdle;
 
