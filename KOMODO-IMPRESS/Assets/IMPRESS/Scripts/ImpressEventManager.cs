@@ -11,29 +11,8 @@ namespace Komodo.IMPRESS
     [RequireComponent(typeof(MainUIReferences))]
     public class ImpressEventManager : MonoBehaviour
     {
-        public UnityEvent onSunButtonEnabled;
-
-        public UnityEvent onSunButtonDisabled;
-
-        public UnityEvent onSpotlightButtonEnabled;
-
-        public UnityEvent onSpotlightButtonDisabled;
-
-        public UnityEvent onStrokeButtonEnabled;
-
-        public UnityEvent onStrokeButtonDisabled;
-
-        public PlayerReferences playerRefs;
-
-        public MainUIReferences uiRefs;
-
         public void Start()
         {
-            if (playerRefs == null)
-            {
-                throw new System.NullReferenceException("playerRefs");
-            }
-
             // TODO (Brandon): Restore ability to add spot light and sun light.
             //  Examples: 
             //  public Alternate_Button_Function sunPointLightButton;
@@ -42,7 +21,7 @@ namespace Komodo.IMPRESS
             //  {
             //         LightsManager.Instance.sunPointLightModel.SetActive(true);
             //  });
-        
+
             //  LightsManager.Instance.spotLightModel.SetActive(true);
         }
 

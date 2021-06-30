@@ -9,9 +9,7 @@ namespace Komodo.IMPRESS
 {
     public class ImpressMenu : MonoBehaviour
     {
-        public Button eraseButton;
-
-        private bool _eraserEnabled = false;
+        public TabButton eraseTab;
 
         public Button undoButton;
 
@@ -41,7 +39,7 @@ namespace Komodo.IMPRESS
 
         void OnValidate ()
         {
-            if (eraseButton == null)
+            if (eraseTab == null)
             {
                 throw new UnassignedReferenceException("eraseButton");
             }
@@ -114,20 +112,14 @@ namespace Komodo.IMPRESS
 
         void Start ()
         {
-            eraseButton.onClick.AddListener(() => 
+            eraseTab.onTabSelected.AddListener(() => 
             {
-                if (_eraserEnabled)
-                {
-                    ImpressEventManager.TriggerEvent("eraserDisabled");
+                ImpressEventManager.TriggerEvent("eraser.enable");
+            });
 
-                    _eraserEnabled = false;
-
-                    return;
-                }
-
-                ImpressEventManager.TriggerEvent("eraserEnabled");
-
-                _eraserEnabled = true;
+            eraseTab.onTabDeselected.AddListener(() => 
+            {
+                ImpressEventManager.TriggerEvent("eraser.disable");
             });
 
             undoButton.onClick.AddListener(() =>
