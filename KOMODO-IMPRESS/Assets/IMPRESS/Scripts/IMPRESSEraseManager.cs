@@ -69,7 +69,7 @@ namespace Komodo.IMPRESS
                 netReg.gameObject.SetActive(false);
 
                 // tell other clients to do the same thing
-                CreatePrimitiveManager.Instance.SendPrimitiveNetworkUpdate(entityID, -9);
+                CreatePrimitiveManager.Instance.SendPrimitiveUpdate(entityID, -9);
 
                 // save to actions stack
                 if (UndoRedoManager.IsAlive)
@@ -78,7 +78,7 @@ namespace Komodo.IMPRESS
                     {
                         netReg.gameObject.SetActive(true);
 
-                        CreatePrimitiveManager.Instance.SendPrimitiveNetworkUpdate(entityID, 9);
+                        CreatePrimitiveManager.Instance.SendPrimitiveUpdate(entityID, 9);
                     });
                 }
             }

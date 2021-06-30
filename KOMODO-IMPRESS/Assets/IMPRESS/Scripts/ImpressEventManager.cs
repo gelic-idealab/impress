@@ -39,13 +39,7 @@ namespace Komodo.IMPRESS
 
         public Alternate_Button_Function ungroupButton;
 
-        public Alternate_Button_Function sunPointLightButton;
-
-        public Alternate_Button_Function spotLightModelButton;
-
         public GameObject togglesContainer;
-
-        public GameObject drawTab;
 
         void OnValidate ()
         {
@@ -59,24 +53,9 @@ namespace Komodo.IMPRESS
                 throw new System.NullReferenceException("ungroupButton");
             }
 
-            if (sunPointLightButton == null)
-            {
-                throw new System.NullReferenceException("sunPointLightButton");
-            }
-
-            if (spotLightModelButton == null)
-            {
-                throw new System.NullReferenceException("spotLightModelButton");
-            }
-
             if (togglesContainer == null)
             {
                 throw new System.NullReferenceException("togglesContainer");
-            }
-
-            if (drawTab == null)
-            {
-                throw new System.NullReferenceException("drawTab");
             }
         }
 
@@ -110,40 +89,16 @@ namespace Komodo.IMPRESS
                 });
             }
 
-            sunPointLightButton.onFirstClick.AddListener(() =>
-            {
-                LightsManager.Instance.sunPointLightModel.SetActive(true);
-            });
-
-            sunPointLightButton.onSecondClick.AddListener(() =>
-            {
-                LightsManager.Instance.sunPointLightModel.SetActive(false);
-            });
-
-            spotLightModelButton.onFirstClick.AddListener(() =>
-            {
-                LightsManager.Instance.spotLightModel.SetActive(true);
-            });
-
-            spotLightModelButton.onSecondClick.AddListener(() =>
-            {
-                LightsManager.Instance.spotLightModel.SetActive(false);
-            });
-
-            TabButton tab = drawTab.GetComponent<TabButton>();
-
-            if (tab)
-            {
-                tab.onTabSelected.AddListener(() =>
-                {
-                    uiRefs.OnDrawButtonFirstClick(playerRefs);
-                });
-
-                tab.onTabDeselected.AddListener(() =>
-                {
-                    uiRefs.OnDrawButtonSecondClick(playerRefs);
-                });
-            }
+            // TODO (Brandon): Restore ability to add spot light and sun light.
+            //  Examples: 
+            //  public Alternate_Button_Function sunPointLightButton;
+            //  public Alternate_Button_Function spotLightModelButton;
+            //  sunPointLightButton.onFirstClick.AddListener(() =>
+            //  {
+            //         LightsManager.Instance.sunPointLightModel.SetActive(true);
+            //  });
+        
+            //  LightsManager.Instance.spotLightModel.SetActive(true);
         }
 
         // From Unity Learn Tutorial: 

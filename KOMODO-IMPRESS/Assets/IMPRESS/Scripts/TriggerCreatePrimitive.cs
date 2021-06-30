@@ -12,9 +12,9 @@ namespace Komodo.IMPRESS
         public void OnEnable()
         {
             //only create when our cursor is Off
-            if (UIManager.IsAlive)
-                if (UIManager.Instance.GetCursorActiveState())
-                    return;
+            if (UIManager.IsAlive && UIManager.Instance.GetCursorActiveState()) {
+                return;
+            }
 
             CreatePrimitiveManager.Instance.CreatePrimitive();
         }
