@@ -14,7 +14,7 @@ namespace Komodo.IMPRESS
     {
         public static CreatePrimitiveManager Instance
         {
-            get { return ((CreatePrimitiveManager)_Instance); }
+            get { return (CreatePrimitiveManager)_Instance; }
             set { _Instance = value; }
         }
 
@@ -36,6 +36,10 @@ namespace Komodo.IMPRESS
 
         public Toggle currentToggle;
 
+        public PlayerReferences playerRefs;
+
+        public ImpressPlayer player;
+
         EntityManager entityManager;
 
         Transform primitiveCreationParent;
@@ -48,9 +52,9 @@ namespace Komodo.IMPRESS
 
         private bool _isEnabled;
 
-        private UnityAction _enableCreation;
+        private UnityAction _enable;
 
-        private UnityAction _disableCreation;
+        private UnityAction _disable;
 
         private UnityAction _selectSphere;
 
@@ -115,8 +119,6 @@ namespace Komodo.IMPRESS
 
             InitializeAnchors();
 
-            InitializeUI();
-
             InitializeListeners();
 
             GlobalMessageManager.Instance.Subscribe("primitive", (str) => ReceivePrimitiveUpdate(str));
@@ -126,53 +128,29 @@ namespace Komodo.IMPRESS
         {
             _primitiveAnchor = default;
 
-            if (GameObject.FindGameObjectWithTag("Player").TryGetComponent(out PlayerReferences playerRefs))
-            {
-                //set our display's parent to our hand
-                ghostPrimitivesParent.SetParent(playerRefs.handL.transform, true);
-            }
+            //set our display's parent to our hand
+            ghostPrimitivesParent.SetParent(playerRefs.handL.transform, true);
 
-            if (GameObject.FindGameObjectWithTag("Player").TryGetComponent(out ImpressPlayer player))
-            {
-                _primitiveAnchor = player.leftShapeTrigger;
-            }
+            _primitiveAnchor = player.triggerCreatePrimitiveLeft;
         }
 
-        public void InitializeUI ()
-        {
-            if (GameObject.FindGameObjectWithTag("MenuUI").TryGetComponent(out ImpressEventManager eventManager))
-            {
-                toggleButtons = eventManager.togglesContainer.GetComponentsInChildren<Toggle>(true);
-
-                toggleGroup = eventManager.togglesContainer.GetComponentInChildren<ToggleGroup>(true);
-
-                for (int i = 0; i < toggleButtons.Length; i += 1)
-                {
-                    toggleButtons[0].onValueChanged.AddListener((bool state) => 
-                    { 
-                        TogglePrimitive(state, 0);
-                    });
-                }
-            }
-        }
-
-        private void _EnableCreation ()
+        private void _Enable ()
         {
             _isEnabled = true;
 
             _ToggleGhostPrimitive(true);
-            
+
             _primitiveAnchor.gameObject.SetActive(true);
         }
 
-        private void _DisableCreation ()
+        private void _Disable ()
         {
             _isEnabled = false;
 
             _currentType = default;
 
             _ToggleGhostPrimitive(false);
-            
+
             _primitiveAnchor.gameObject.SetActive(false);
         }
 
@@ -238,49 +216,53 @@ namespace Komodo.IMPRESS
 
         public void InitializeListeners ()
         {
-            _enableCreation += _EnableCreation;
+            _enable += _Enable;
 
-            ImpressEventManager.StartListening("primitiveEnableCreation", _enableCreation);
+            ImpressEventManager.StartListening("primitiveTool.enable", _enable);
+
+            _disable += _Disable;
+
+            ImpressEventManager.StartListening("primitiveTool.disable", _disable);
 
             _selectSphere += _SelectSphere;
 
-            ImpressEventManager.StartListening("primitiveSelectSphere", _selectSphere);
+            ImpressEventManager.StartListening("primitiveTool.selectSphere", _selectSphere);
 
             _selectCapsule += _SelectCapsule;
 
-            ImpressEventManager.StartListening("primitiveSelectCapsule", _selectCapsule);
-            
+            ImpressEventManager.StartListening("primitiveTool.selectCapsule", _selectCapsule);
+
             _selectCube += _SelectCube;
 
-            ImpressEventManager.StartListening("primitiveSelectCube", _selectCube);
-            
+            ImpressEventManager.StartListening("primitiveTool.selectCube", _selectCube);
+
             _selectPlane += _SelectPlane;
 
-            ImpressEventManager.StartListening("primitiveSelectPlane", _selectPlane);
-            
+            ImpressEventManager.StartListening("primitiveTool.selectPlane", _selectPlane);
+
             _selectCylinder += _SelectCylinder;
 
-            ImpressEventManager.StartListening("primitiveSelectCylinder", _selectCylinder);
+            ImpressEventManager.StartListening("primitiveTool.selectCylinder", _selectCylinder);
 
             _deselectSphere += _DeselectSphere;
 
-            ImpressEventManager.StartListening("primitiveDeselectSphere", _deselectSphere);
+            ImpressEventManager.StartListening("primitiveTool.deselectSphere", _deselectSphere);
 
             _deselectCapsule += _DeselectCapsule;
 
-            ImpressEventManager.StartListening("primitiveDeselectCapsule", _deselectCapsule);
-            
+            ImpressEventManager.StartListening("primitiveTool.deselectCapsule", _deselectCapsule);
+
             _deselectCube += _DeselectCube;
 
-            ImpressEventManager.StartListening("primitiveDeselectCube", _deselectCube);
-            
+            ImpressEventManager.StartListening("primitiveTool.deselectCube", _deselectCube);
+
             _deselectPlane += _DeselectPlane;
 
-            ImpressEventManager.StartListening("primitiveDeselectPlane", _deselectPlane);
-            
+            ImpressEventManager.StartListening("primitiveTool.deselectPlane", _deselectPlane);
+
             _deselectCylinder += _DeselectCylinder;
 
-            ImpressEventManager.StartListening("primitiveDeselectCylinder", _deselectCylinder);
+            ImpressEventManager.StartListening("primitiveTool.deselectCylinder", _deselectCylinder);
         }
 
         private void TogglePrimitive (bool state, int index) 
@@ -289,14 +271,14 @@ namespace Komodo.IMPRESS
 
             DeactivateAllChildren(); 
 
-            ghostPrimitivesParent.GetChild(index).gameObject.SetActive(true); 
-            
+            ghostPrimitivesParent.GetChild(index).gameObject.SetActive(true);
+
             _primitiveAnchor.gameObject.SetActive(state);
         }
 
         private void _ToggleGhostPrimitive (bool state)
         {
-            ghostPrimitivesParent.gameObject.SetActive(state); 
+            ghostPrimitivesParent.gameObject.SetActive(state);
         }
 
         public void GetCurrentToggle (bool state)
@@ -403,7 +385,7 @@ namespace Komodo.IMPRESS
             primitive.transform.rotation = rot;
 
             primitive.transform.SetParent(primitiveCreationParent.transform, true);
-            
+
             _primitiveID = 100000000 + 10000000 + NetworkUpdateHandler.Instance.client_id * 10000 + _strokeIndex;
 
             _strokeIndex++;
@@ -459,17 +441,18 @@ namespace Komodo.IMPRESS
             if (newData.primitiveType == 9)
             {
                 if (ClientSpawnManager.Instance.networkedObjectFromEntityId.ContainsKey(newData.primitiveId))
-
+                {
                     ClientSpawnManager.Instance.networkedObjectFromEntityId[newData.primitiveId].gameObject.SetActive(true);
+                }
 
                 return;
             }
-
             else if (newData.primitiveType == -9)
             {
                 if (ClientSpawnManager.Instance.networkedObjectFromEntityId.ContainsKey(newData.primitiveId))
-
+                {
                     ClientSpawnManager.Instance.networkedObjectFromEntityId[newData.primitiveId].gameObject.SetActive(false);
+                }
 
                 return;
             }

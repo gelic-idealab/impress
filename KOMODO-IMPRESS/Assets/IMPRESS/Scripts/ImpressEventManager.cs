@@ -11,14 +11,6 @@ namespace Komodo.IMPRESS
     [RequireComponent(typeof(MainUIReferences))]
     public class ImpressEventManager : MonoBehaviour
     {
-        public UnityEvent onGroupButtonEnabled;
-
-        public UnityEvent onGroupButtonDisabled;
-
-        public UnityEvent onUngroupButtonEnabled;
-
-        public UnityEvent onUngroupButtonDisabled;
-
         public UnityEvent onSunButtonEnabled;
 
         public UnityEvent onSunButtonDisabled;
@@ -35,58 +27,11 @@ namespace Komodo.IMPRESS
 
         public MainUIReferences uiRefs;
 
-        public Alternate_Button_Function groupButton;
-
-        public Alternate_Button_Function ungroupButton;
-
-        public GameObject togglesContainer;
-
-        void OnValidate ()
-        {
-            if (groupButton == null)
-            {
-                throw new System.NullReferenceException("groupButton");
-            }
-
-            if (ungroupButton == null)
-            {
-                throw new System.NullReferenceException("ungroupButton");
-            }
-
-            if (togglesContainer == null)
-            {
-                throw new System.NullReferenceException("togglesContainer");
-            }
-        }
-
         public void Start()
         {
             if (playerRefs == null)
             {
                 throw new System.NullReferenceException("playerRefs");
-            }
-
-            if (GameObject.FindGameObjectWithTag("Player").TryGetComponent(out ImpressPlayer player))
-            {
-                groupButton.onFirstClick.AddListener(() =>
-                {
-                    player.leftTriggerGroup.gameObject.SetActive(true);
-                });
-
-                groupButton.onSecondClick.AddListener(() =>
-                {
-                    player.leftTriggerGroup.gameObject.SetActive(false);
-                });
-
-                ungroupButton.onFirstClick.AddListener(() =>
-                {
-                    player.leftTriggerUngroup.gameObject.SetActive(true);
-                });
-
-                ungroupButton.onSecondClick.AddListener(() =>
-                {
-                    player.leftTriggerUngroup.gameObject.SetActive(false);
-                });
             }
 
             // TODO (Brandon): Restore ability to add spot light and sun light.

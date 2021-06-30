@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace Komodo.IMPRESS
 {
-    public class TriggerUnlink : MonoBehaviour
+    public class TriggerUngroup : MonoBehaviour
     {
         public void OnTriggerEnter(Collider collider)
         {
-            GroupManager.Instance.RemoveFromLinkedGroup(collider);
+            GroupManager.Instance.RemoveFromGroup(collider);
         }
     }
 }

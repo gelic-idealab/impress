@@ -6,14 +6,14 @@ using Komodo.Runtime;
 
 namespace Komodo.IMPRESS
 {
-    // TODO - replace DrawingInstanceManager in IMPRESSMain2.unity with this script.
+    // TODO(Brandon) - rename this to BrushManager
     public class DrawingManager : DrawingInstanceManager
     {
         public PlayerReferences playerRefs;
 
-        private UnityAction _drawToolEnabled;
+        private UnityAction _enable;
 
-        private UnityAction _drawToolDisabled;
+        private UnityAction _disable;
 
         void OnValidate ()
         {
@@ -25,27 +25,29 @@ namespace Komodo.IMPRESS
 
         void Start ()
         {
-            _drawToolEnabled += EnableDrawTool;
+            _enable += Enable;
 
-            ImpressEventManager.StartListening("drawToolEnabled", _drawToolEnabled);
+            ImpressEventManager.StartListening("drawTool.enable", _enable);
 
-            _drawToolDisabled += DisableDrawTool;
+            _disable += Disable;
 
-            ImpressEventManager.StartListening("drawToolDisabled", _drawToolDisabled);
+            ImpressEventManager.StartListening("drawTool.disable", _disable);
         }
 
-        public void EnableDrawTool ()
+        // Our own function. Not to be confused with Unity's OnEnable.
+        public void Enable ()
         {
-            playerRefs.drawL.gameObject.SetActive(true); 
+            playerRefs.drawL.gameObject.SetActive(true);
 
-            playerRefs.drawR.gameObject.SetActive(true); 
+            playerRefs.drawR.gameObject.SetActive(true);
         }
 
-        public void DisableDrawTool ()
+        // Our own function. Not to be confused with Unity's OnDisable.
+        public void Disable ()
         {
-            playerRefs.drawL.gameObject.SetActive(false); 
-            
-            playerRefs.drawR.gameObject.SetActive(false); 
-        }    
+            playerRefs.drawL.gameObject.SetActive(false);
+
+            playerRefs.drawR.gameObject.SetActive(false);
+        }
     }
 }

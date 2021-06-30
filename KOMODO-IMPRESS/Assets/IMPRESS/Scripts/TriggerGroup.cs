@@ -5,12 +5,11 @@ using Komodo.Runtime;
 
 namespace Komodo.IMPRESS
 {
-
-    public class TriggerLink : MonoBehaviour
+    public class TriggerGroup : MonoBehaviour
     {
         public void OnTriggerEnter(Collider collider)
         {
-            GroupManager.Instance.AddToLinkedGroup(collider);
+            GroupManager.Instance.AddToGroup(collider);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Komodo.IMPRESS
 
         public Button undoButton;
 
-        public GameObject drawTab;
+        public TabButton drawTab;
 
         public Toggle brushToggle;
 
@@ -29,21 +29,36 @@ namespace Komodo.IMPRESS
 
         public Toggle sphereToggle;
 
+        public TabButton groupTab;
+
+        public Toggle redToggle;
+
+        public Toggle blueToggle;
+
+        public Toggle groupToggle;
+
+        public Toggle ungroupToggle;
+
         void OnValidate ()
         {
             if (eraseButton == null)
             {
                 throw new UnassignedReferenceException("eraseButton");
             }
-            
+
+            if (!drawTab)
+            {
+                throw new UnassignedReferenceException("drawTab");
+            }
+
+            if (!groupTab)
+            {
+                throw new UnassignedReferenceException("groupTab");
+            }
+
             if (undoButton == null)
             {
                 throw new UnassignedReferenceException("undoButton");
-            }
-
-            if (drawTab == null)
-            {
-                throw new UnassignedReferenceException("drawTab");
             }
 
             if (brushToggle == null)
@@ -75,6 +90,26 @@ namespace Komodo.IMPRESS
             {
                 throw new UnassignedReferenceException("planeToggle");
             }
+
+            if (redToggle == null)
+            {
+                throw new UnassignedReferenceException("redToggle");
+            }
+
+            if (blueToggle == null)
+            {
+                throw new UnassignedReferenceException("blueToggle");
+            }
+
+            if (groupToggle == null)
+            {
+                throw new UnassignedReferenceException("groupToggle");
+            }
+
+            if (ungroupToggle == null)
+            {
+                throw new UnassignedReferenceException("ungroupToggle");
+            }
         }
 
         void Start ()
@@ -100,103 +135,164 @@ namespace Komodo.IMPRESS
                 UndoRedoManager.Instance.Undo();
             });
 
-            TabButton tab = drawTab.GetComponent<TabButton>();
-
-            if (tab)
+            drawTab.onTabSelected.AddListener(() =>
             {
-                tab.onTabSelected.AddListener(() =>
-                {
-                    ImpressEventManager.TriggerEvent("drawToolEnabled");
-                });
+                // do nothing.
+            });
 
-                tab.onTabDeselected.AddListener(() =>
-                {
-                    ImpressEventManager.TriggerEvent("drawToolDisabled");
-                });
-            }
+            drawTab.onTabDeselected.AddListener(() =>
+            {
+                ImpressEventManager.TriggerEvent("drawTool.disable");
+
+                ImpressEventManager.TriggerEvent("primitiveTool.disable");
+            });
 
             brushToggle.onValueChanged.AddListener((isOn) =>
             {
                 if (isOn)
                 {
-                    // TODO(Brandon) - send event to turn on brush
+                    ImpressEventManager.TriggerEvent("drawTool.enable");
 
-                    ImpressEventManager.TriggerEvent("primitiveDisableCreation");
+                    ImpressEventManager.TriggerEvent("primitiveTool.disable");
 
                     // TODO(Brandon) - is this the best way to get out of the primitive creation mode?
 
                     return;
                 }
+
+                ImpressEventManager.TriggerEvent("drawTool.disable");
             });
 
             sphereToggle.onValueChanged.AddListener((isOn) =>
             {
                 if (isOn)
                 {
-                    ImpressEventManager.TriggerEvent("primitiveSelectSphere");
+                    ImpressEventManager.TriggerEvent("primitiveTool.selectSphere");
 
-                    ImpressEventManager.TriggerEvent("primitiveEnableCreation");
+                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
                     return;
                 }
-                
-                ImpressEventManager.TriggerEvent("primitiveDeselectSphere");
+
+                ImpressEventManager.TriggerEvent("primitiveTool.deselectSphere");
             });
 
             capsuleToggle.onValueChanged.AddListener((isOn) =>
             {
                 if (isOn)
                 {
-                    ImpressEventManager.TriggerEvent("primitiveSelectCapsule");
+                    ImpressEventManager.TriggerEvent("primitiveTool.selectCapsule");
 
-                    ImpressEventManager.TriggerEvent("primitiveEnableCreation");
+                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
                     return;
                 }
-                
-                ImpressEventManager.TriggerEvent("primitiveDeselectCapsule");
+
+                ImpressEventManager.TriggerEvent("primitiveTool.deselectCapsule");
             });
 
             cylinderToggle.onValueChanged.AddListener((isOn) =>
             {
                 if (isOn)
                 {
-                    ImpressEventManager.TriggerEvent("primitiveSelectCylinder");
+                    ImpressEventManager.TriggerEvent("primitiveTool.selectCylinder");
 
-                    ImpressEventManager.TriggerEvent("primitiveEnableCreation");
+                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
                     return;
                 }
-                
-                ImpressEventManager.TriggerEvent("primitiveDeselectCylinder");
+
+                ImpressEventManager.TriggerEvent("primitiveTool.deselectCylinder");
             });
 
             cubeToggle.onValueChanged.AddListener((isOn) =>
             {
                 if (isOn)
                 {
-                    ImpressEventManager.TriggerEvent("primitiveSelectCube");
+                    ImpressEventManager.TriggerEvent("primitiveTool.selectCube");
 
-                    ImpressEventManager.TriggerEvent("primitiveEnableCreation");
+                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
                     return;
                 }
-                
-                ImpressEventManager.TriggerEvent("primitiveDeselectCube");
+
+                ImpressEventManager.TriggerEvent("primitiveTool.deselectCube");
             });
 
             planeToggle.onValueChanged.AddListener((isOn) =>
             {
                 if (isOn)
                 {
-                    ImpressEventManager.TriggerEvent("primitiveSelectPlane");
+                    ImpressEventManager.TriggerEvent("primitiveTool.selectPlane");
 
-                    ImpressEventManager.TriggerEvent("primitiveEnableCreation");
+                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
                     return;
                 }
+
+                ImpressEventManager.TriggerEvent("primitiveTool.deselectPlane");
+            });
+
+            groupTab.onTabSelected.AddListener(() =>
+            {
+                ImpressEventManager.TriggerEvent("groupTool.showGroups");
+            });
+
+            groupTab.onTabDeselected.AddListener(() =>
+            {
+                ImpressEventManager.TriggerEvent("groupTool.hideGroups");
+
+                ImpressEventManager.TriggerEvent("groupTool.disableGrouping");
                 
-                ImpressEventManager.TriggerEvent("primitiveDeselectPlane");
+                ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
+            });
+
+            redToggle.onValueChanged.AddListener((isOn) =>
+            {
+                if (isOn)
+                {
+                    ImpressEventManager.TriggerEvent("groupTool.selectRed");
+
+                    return;
+                }
+
+                ImpressEventManager.TriggerEvent("groupTool.deselectRed");
+            });
+
+            blueToggle.onValueChanged.AddListener((isOn) =>
+            {
+                if (isOn)
+                {
+                    ImpressEventManager.TriggerEvent("groupTool.selectBlue");
+
+                    return;
+                }
+
+                ImpressEventManager.TriggerEvent("groupTool.deselectBlue");
+            });
+
+            groupToggle.onValueChanged.AddListener((isOn) =>
+            {
+                if (isOn)
+                {
+                    ImpressEventManager.TriggerEvent("groupTool.enableGrouping");
+
+                    return;
+                }
+
+                ImpressEventManager.TriggerEvent("groupTool.disableGrouping");
+            });
+
+            ungroupToggle.onValueChanged.AddListener((isOn) =>
+            {
+                if (isOn)
+                {
+                    ImpressEventManager.TriggerEvent("groupTool.enableUngrouping");
+
+                    return;
+                }
+
+                ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
             });
         }
     }

@@ -2,494 +2,560 @@ using Komodo.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using Komodo.Runtime;
-
-public struct GroupProperties
-{
-   public int groupID;
-    public int entityID;
-    public bool isAdding;
-}
 
 namespace Komodo.IMPRESS
 {
+    public struct GroupProperties
+    {
+        public int groupID;
+        public int entityID;
+        public bool isAdding;
+    }
+
+    public enum GroupColor {
+        RED,
+        BLUE,
+
+    }
+
     public class GroupManager : SingletonComponent<GroupManager>
     {
         public static GroupManager Instance
         {
-            get { return ((GroupManager)_Instance); }
+            get { return (GroupManager)_Instance; }
             set { _Instance = value; }
         }
 
-        public GameObject linkBoundingPrefab;
-        public Dictionary<int, LinkedGroup> linkedGroupDictionary = new Dictionary<int, LinkedGroup>();
+        private BoxCollider currentRootCollider;
 
-        BoxCollider currentRootCollider;
+        private UnityAction _showGroups;
 
-        public KomodoControllerInteraction LcontrollerInteraction;
-        public KomodoControllerInteraction RcontrollerInteraction;
+        private UnityAction _hideGroups;
+
+        private UnityAction _enableGrouping;
+
+        private UnityAction _disableGrouping;
+
+        private UnityAction _enableUngrouping;
+
+        private UnityAction _disableUngrouping;
+
+        private UnityAction _selectRed;
+
+        private UnityAction _selectBlue;
+
+        private Group currentGroup;
+
+        private int _currentGroupType;
+
+        public KomodoControllerInteraction leftControllerInteraction;
+
+        public KomodoControllerInteraction rightControllerInteraction;
+
+        public ImpressPlayer player;
+
+        public GameObject groupBoundingBox;
+
+        public Dictionary<int, Group> groups = new Dictionary<int, Group>();
 
         public void Awake()
         {
             //used to set our managers alive state to true to detect if it exist within scene
             var initManager = Instance;
 
+            //register our message with the funcion that will be receiving updates from others
+            GlobalMessageManager.Instance.Subscribe("group", (str) => ReceiveGroupUpdate(str));
+        }
 
-            if (GameObject.FindGameObjectWithTag("MenuUI").TryGetComponent(out ImpressEventManager uiRef))
+        public void Start ()
+        {
+            if (!leftControllerInteraction)
             {
-                uiRef.groupButton.onFirstClick.AddListener(() => SetAllGroupsToRender());
-                uiRef.groupButton.onSecondClick.AddListener(() => SetAllGroupsToNOTRender());
+                throw new UnassignedReferenceException("LeftControllerInteraction");
             }
 
-            //register our message with the funcion that will be receiving updates from others
-            GlobalMessageManager.Instance.Subscribe("group", (str) => GroupRefresh(str));
+            if (!rightControllerInteraction)
+            {
+                throw new UnassignedReferenceException("RightControllerInteraction");
+            }
+
+            if (!player)
+            {
+                throw new UnassignedReferenceException("player");
+            }
+
+            if (!groupBoundingBox)
+            {
+                throw new UnassignedReferenceException("groupBoundingBox");
+            }
+
+            _showGroups += ShowGroups;
+
+            ImpressEventManager.StartListening("groupTool.showGroups", _showGroups);
+
+            _hideGroups += HideGroups;
+
+            ImpressEventManager.StartListening("groupTool.hideGroups", _hideGroups);
+
+            _enableGrouping += _EnableGrouping;
+
+            ImpressEventManager.StartListening("groupTool.enableGrouping", _enableGrouping);
+
+            _disableGrouping += _DisableGrouping;
+
+            ImpressEventManager.StartListening("groupTool.disableGrouping", _disableGrouping);
+
+            _enableUngrouping += _EnableUngrouping;
+
+            ImpressEventManager.StartListening("groupTool.enableUngrouping", _enableUngrouping);
+
+            _disableUngrouping += _DisableUngrouping;
+
+            ImpressEventManager.StartListening("groupTool.disableUngrouping", _disableUngrouping);
+
+            _selectRed += _SelectRed;
+
+            ImpressEventManager.StartListening("groupTool.selectRed", _selectRed);
+
+            _selectBlue += _SelectBlue;
+
+            ImpressEventManager.StartListening("groupTool.selectBlue", _selectBlue);
         }
 
+        private void _EnableGrouping ()
+        {
+            player.triggerGroupLeft.gameObject.SetActive(true);
+
+            player.triggerGroupRight.gameObject.SetActive(true);
+        }
+
+        private void _DisableGrouping ()
+        {
+            player.triggerGroupLeft.gameObject.SetActive(false);
+
+            player.triggerGroupRight.gameObject.SetActive(false);
+        }
+
+        private void _EnableUngrouping ()
+        {
+            player.triggerUngroupLeft.gameObject.SetActive(true);
+
+            player.triggerUngroupRight.gameObject.SetActive(true);
+        }
+
+        private void _DisableUngrouping ()
+        {
+            player.triggerUngroupLeft.gameObject.SetActive(false);
+
+            player.triggerUngroupRight.gameObject.SetActive(false);
+        }
 
         /// <summary>
-        /// Set all groups to render their bounding boxes.
+        /// Show and hide bounding boxes, which represent groups.
         /// </summary>
-        public void SetAllGroupsToRender()
+        public void ShowGroups()
         {
-            foreach (var item in linkedGroupDictionary.Values)
+            foreach (var item in groups.Values)
             {
-                item.GetComponent<MeshRenderer>().enabled = true; 
-            };
+                item.GetComponent<MeshRenderer>().enabled = true;
+            }
         }
-        public void SetAllGroupsToNOTRender()
-        {
-            foreach (var item in linkedGroupDictionary.Values)
-            {
-   
 
+        public void HideGroups()
+        {
+            foreach (var item in groups.Values)
+            {
                 item.transform.GetComponent<BoxCollider>().enabled = true;
 
                 foreach (Transform colItems in item.transform.GetChild(0))
+                {
                     colItems.GetComponent<BoxCollider>().enabled = false;
+                }
 
                 item.GetComponent<MeshRenderer>().enabled = false;
-
-            };
+            }
         }
 
-        public int userId;
-
-
-      /// <summary>
-      /// Current group id selected for the user
-      /// </summary>
-      /// <param name="id"></param>
-        public void WorkingGroupID(int id)
+        private void _SelectRed ()
         {
-            this.userId = id;
+            this._currentGroupType = (int) GroupColor.RED;
+        }
 
+        private void _SelectBlue ()
+        {
+            this._currentGroupType = (int) GroupColor.BLUE;
+        }
+
+        private void _CreateNewGroup (int groupID)
+        {
+            currentGroup = Instantiate(groupBoundingBox).AddComponent<Group>();
+
+            //make net component
+            ClientSpawnManager.Instance.CreateNetworkedGameObject(currentGroup.gameObject);
+
+            //make child of parent to contain our grouped objects
+            currentGroup.groupsParent = new GameObject("Linker Parent").transform;
+
+            var mat = currentGroup.GetComponent<MeshRenderer>().material;
+
+            Color color = Color.black;
+
+            if (groupID == (int) GroupColor.RED)
+            {
+                color = Color.red;
+            }
+            else if (groupID == (int) GroupColor.BLUE)
+            {
+                color = Color.blue;
+            }
+            else if(groupID == 2)
+            {
+                color = Color.green;
+            }
+            else if (groupID == 3)
+            {
+                color = Color.grey;
+            }
+
+            color.a = 0.39f;
+
+            mat.SetColor("_Color", color);
+
+            currentGroup.GetComponent<MeshRenderer>().material = mat;
+
+            //add new item to our dictionary and collection
+            groups.Add(groupID, currentGroup);
+
+            currentGroup.groups = new List<Collider>();
+        }
+
+        private void _UpdateGroupBounds ()
+        {
+            //remove our children before we create a new bounding box for our parent containing the group
+            currentGroup.transform.DetachChildren();
+
+            currentGroup.groupsParent.transform.DetachChildren();
+
+            //establish new bounding box
+            var newBound = new Bounds(currentGroup.groups[0].transform.position, Vector3.one * 0.02f);
+
+            for (int i = 0; i < currentGroup.groups.Count; i += 1)
+            {
+                var _collider = currentGroup.groups[i];
+
+                //turn it on to get bounds info 
+                _collider.enabled = true;
+
+                //set new collider bounds
+                newBound.Encapsulate(new Bounds(_collider.transform.position, _collider.bounds.size));
+
+                _collider.enabled = false;
+            }
+
+            //set fields for our new created bounding box
+            currentGroup.transform.position = newBound.center;
+
+            currentGroup.transform.SetGlobalScale(newBound.size);
+
+            currentGroup.transform.rotation = Quaternion.identity;
+
+            currentGroup.groupsParent.rotation = Quaternion.identity;
+
+            //recreate our collider to be consistent with the new render bounds
+            if (currentGroup.TryGetComponent(out BoxCollider boxCollider))
+            {
+                Destroy(boxCollider);
+            }
+
+            currentRootCollider = currentGroup.gameObject.AddComponent<BoxCollider>();
+
+            //add children again
+            foreach (var item in currentGroup.groups)
+            {
+                item.transform.SetParent(currentGroup.groupsParent, true);
+            }
+
+            //add our collection parent to our bounding box parent
+            currentGroup.groupsParent.SetParent(currentGroup.transform, true);
+        }
+
+        public int GroupIDFromClientIDOrGroupType (int otherClientID)
+        {
+            if (otherClientID == -1)
+            {
+                return _currentGroupType;
+            }
+            else
+            {
+                return otherClientID;
+            }
         }
 
         /// <summary>
         /// Add an object to a specific group
         /// </summary>
         /// <param name="collider"> The collider of the adding elemen</param>
-        /// <param name="customID">customID should not be included or should be -1 to use the userID instead for identifying what group to add to</param>
-        public void AddToLinkedGroup(Collider collider, int customID = -1)
+        /// <param name="otherClientID">customID should not be included or should be -1 to use the userID instead for identifying what group to add to</param>
+        public void AddToGroup(Collider collider, int otherClientID = -1)
         {
             if (!collider.CompareTag("Interactable"))
+            {
                 return;
+            }
 
-            //to check if this is a call from the client or external clients
-            var id = 0;
-
-            if (customID == -1)
-                id = userId;
-            else
-                id = customID;
-
-         
-            foreach (KeyValuePair<int,LinkedGroup> linkGroup in linkedGroupDictionary)
+            foreach (KeyValuePair<int, Group> candidateGroup in groups)
             {
                 //we do not want to add the constructing boxes to itself
-                if (linkGroup.Value.gameObject.GetInstanceID() == collider.gameObject.GetInstanceID())
+                if (candidateGroup.Value.gameObject.GetInstanceID() == collider.gameObject.GetInstanceID())
+                {
                     return;
+                }
             }
 
+            // check if this is a call from the user or an external client
+            int groupID = GroupIDFromClientIDOrGroupType(otherClientID);
 
-            //check if we do not have a group created
-            if (!linkedGroupDictionary.ContainsKey(id))
+            if (!groups.ContainsKey(groupID))
             {
-                currentLinkedGroup = GameObject.Instantiate(linkBoundingPrefab).AddComponent<LinkedGroup>();
-                
-                //make net component
-              ClientSpawnManager.Instance.CreateNetworkedGameObject(currentLinkedGroup.gameObject);
-
-                //make child of parent to contain our grouped objects
-                currentLinkedGroup.parentOfCollection = new GameObject("Linker Parent").transform;
-
-                //chose what group to make 
-                if (id == 0)
-                {
-                    var mat = currentLinkedGroup.GetComponent<MeshRenderer>().material;
-                    var color = Color.red;
-                    color.a = 0.39f;
-
-                    mat.SetColor("_Color", color);
-                    currentLinkedGroup.GetComponent<MeshRenderer>().material = mat;
-                }
-                else if (id == 1)
-                {
-                  var mat = currentLinkedGroup.GetComponent<MeshRenderer>().material;
-                    var color = Color.blue;
-                    color.a = 0.39f;
-
-                    mat.SetColor("_Color", color);
-                    currentLinkedGroup.GetComponent<MeshRenderer>().material = mat;
-                }
-                else if(id == 2)
-                {
-                    var mat = currentLinkedGroup.GetComponent<MeshRenderer>().material;
-                    var color = Color.green;
-                    color.a = 0.39f;
-
-                    mat.SetColor("_Color", color);
-                    currentLinkedGroup.GetComponent<MeshRenderer>().material = mat;
-                }
-                else if (id == 3)
-                {
-                    var mat = currentLinkedGroup.GetComponent<MeshRenderer>().material;
-                    var color = Color.grey;
-                    color.a = 0.39f;
-
-                    mat.SetColor("_Color", color);
-                    currentLinkedGroup.GetComponent<MeshRenderer>().material = mat;
-                }
-
-                //add new item to our dictionary and collection
-                linkedGroupDictionary.Add(id, currentLinkedGroup);
-                currentLinkedGroup.groupListCollection = new List<Collider>();
-
+                _CreateNewGroup(groupID);
             }
 
-            //establish what group are we currently working on
-                currentLinkedGroup = linkedGroupDictionary[id];
+            currentGroup = groups[groupID];
 
-            //check if we are addng a new object to the group
-            if (!currentLinkedGroup.groupListCollection.Contains(collider))
-                currentLinkedGroup.groupListCollection.Add(collider);
-            else
-                return;
-
-            //remove our children before we create a new bounding box for our parent containing the group
-            currentLinkedGroup.transform.DetachChildren();
-            currentLinkedGroup.parentOfCollection.transform.DetachChildren();
-
-            //establish new bounding box
-            var newBound = new Bounds(currentLinkedGroup.groupListCollection[0].transform.position, Vector3.one * 0.02f);
-            for (int i = 0; i < currentLinkedGroup.groupListCollection.Count; i++)
+            if (currentGroup.groups.Contains(collider))
             {
-                var col = currentLinkedGroup.groupListCollection[i];
-
-                //turn it on to get bounds info 
-                col.enabled = true;
-
-                //set new collider bounds
-                newBound.Encapsulate(new Bounds(col.transform.position, col.bounds.size));
-
-                col.enabled = false;
+                return; // if the group already has this collider, stop.
             }
 
-            //set fields for our new created bounding box
-            currentLinkedGroup.transform.position = newBound.center;
-            currentLinkedGroup.transform.SetGlobalScale(newBound.size);
+            currentGroup.groups.Add(collider);
 
-            currentLinkedGroup.transform.rotation = Quaternion.identity;
-            currentLinkedGroup.parentOfCollection.rotation = Quaternion.identity;
+            _UpdateGroupBounds();
 
-            //recreate our collider to be consistent with the new render bounds
-            if (currentLinkedGroup.TryGetComponent(out BoxCollider boxCollider))
-                Destroy(boxCollider);
+            _DropGroupedObject(collider);
 
-            currentRootCollider = currentLinkedGroup.gameObject.AddComponent<BoxCollider>();
-
-            //add children again
-            foreach (var item in currentLinkedGroup.groupListCollection)
-                item.transform.SetParent(currentLinkedGroup.parentOfCollection, true);
-
-            //add our collection parent to our bounding box parent
-            currentLinkedGroup.parentOfCollection.SetParent(currentLinkedGroup.transform, true);
-
-            //only set our grab object to the group object when it is a different object than its own to avoid the object reparanting itself
-            if (LcontrollerInteraction.currentTransform != null)
-                if (LcontrollerInteraction.currentTransform.GetInstanceID() == collider.transform.GetInstanceID()) //&& lcontrollerOBJID != currentLinkBoundingBox.transform.GetInstanceID())
-                    LcontrollerInteraction.Drop();
-
-            //IF WE ENVELOP THE OBJECT THAT WE ARE GRABBING DROP THAT OBJECT
-            if (RcontrollerInteraction.currentTransform != null)
-                if (RcontrollerInteraction.currentTransform.GetInstanceID() == collider.transform.GetInstanceID()) //&& RcontrollerInteraction.currentTransform.GetInstanceID() != currentLinkBoundingBox.transform.GetInstanceID())
-                    RcontrollerInteraction.Drop();
-
-
-            //send call if it was a client call
-            if (!collider.TryGetComponent<LinkedGroup>(out LinkedGroup lg))
-                if (customID == -1)
-                    SendNetworkMessage(collider.GetComponent<NetworkedGameObject>().thisEntityID, id, true);
-
+            // send call if it was a client call
+            if (!collider.TryGetComponent<Group>(out Group group)
+                && otherClientID == -1)
+            {
+                SendGroupUpdate(collider.GetComponent<NetworkedGameObject>().thisEntityID, groupID, true);
+            }
         }
-        public void SendNetworkMessage(int eID, int gID, bool isAdding)
+
+        // Tells the controller to stop holding the object represented by collider.
+        private void _DropGroupedObject(Collider collider)
         {
-            KomodoMessage km = new KomodoMessage("group", JsonUtility.ToJson(new GroupProperties { entityID = eID, groupID = gID, isAdding = isAdding }));
+            //only set our grab object to the group object when it is a different object than its own to avoid the object reparenting itself
+            if (leftControllerInteraction.currentTransform != null
+                && leftControllerInteraction.currentTransform.GetInstanceID() == collider.transform.GetInstanceID())
+            {
+                leftControllerInteraction.Drop();
+            }
+
+            if (rightControllerInteraction.currentTransform != null
+                && rightControllerInteraction.currentTransform.GetInstanceID() == collider.transform.GetInstanceID())
+            {
+                rightControllerInteraction.Drop();
+            }
+        }
+
+        public void SendGroupUpdate(int _entityID, int _groupID, bool isAdding)
+        {
+            KomodoMessage km = new KomodoMessage("group", JsonUtility.ToJson(
+                new GroupProperties
+                {
+                    entityID = _entityID,
+                    groupID = _groupID,
+                    isAdding = isAdding
+                })
+            );
+
             km.Send();
         }
 
-        private LinkedGroup currentLinkedGroup;
-        public void RemoveFromLinkedGroup(Collider collider, int customID = -1)
+        public void RemoveFromGroup(Collider collider, int otherClientID = -1)
         {
             if (!collider.CompareTag("Interactable"))
                 return;
 
             //to check if this is a call from the client or external clients
-            var id = 0;
+            int groupID;
 
-            if (customID == -1)
-                id = userId;
+            if (otherClientID == -1)
+            {
+                groupID = _currentGroupType;
+            }
             else
-                id = customID;
-
+            {
+                groupID = otherClientID;
+            }
 
             //disable main collider of the linkedgroup to access its child group item colliders
-            if (collider.TryGetComponent(out LinkedGroup lg))
+            if (collider.TryGetComponent(out Group lg))
             {
-                currentLinkedGroup = lg;
+                currentGroup = lg;
 
                 //disable main collider and enable the child elements to remove from main
                 lg.transform.GetComponent<BoxCollider>().enabled = false;
 
-                lg.meshRend = lg.GetComponent<MeshRenderer>();
+                lg.meshRenderer = lg.GetComponent<MeshRenderer>();
 
-                StartCoroutine(RenableParentColliderOutsideRenderBounds(lg.meshRend));
+                StartCoroutine(ReenableParentColliderOutsideRenderBounds(lg.meshRenderer));
 
                 foreach (Transform colItems in lg.transform.GetChild(0))
+                {
                     colItems.GetComponent<Collider>().enabled = true;
+                }
 
                 return;
             }
 
-            if (!linkedGroupDictionary.ContainsKey(id))
+            if (!groups.ContainsKey(groupID))
+            {
                 return;
+            }
 
-            currentLinkedGroup = linkedGroupDictionary[id];
+            currentGroup = groups[groupID];
 
             //handle the items that we touch
-            if (collider.transform.IsChildOf(currentLinkedGroup.parentOfCollection))
+            if (collider.transform.IsChildOf(currentGroup.groupsParent))
             {
                 collider.transform.parent = null;
-                currentLinkedGroup.groupListCollection.Remove(collider);
+                currentGroup.groups.Remove(collider);
 
-                UpdateLinkedGroup(currentLinkedGroup);
+                UpdateGroup(currentGroup);
 
-
-                if (currentLinkedGroup.groupListCollection.Count == 0)
+                if (currentGroup.groups.Count == 0)
                 {
                     ////RE-enable our grabing funcionality by droping destroyed object
-                    if (LcontrollerInteraction.currentTransform != null)
-                        if (LcontrollerInteraction.currentTransform.GetInstanceID() == currentLinkedGroup.transform.GetInstanceID())
+                    if (leftControllerInteraction.currentTransform != null)
+                    {
+                        if (leftControllerInteraction.currentTransform.GetInstanceID() == currentGroup.transform.GetInstanceID())
                         {
-                            LcontrollerInteraction.Drop();
-
+                            leftControllerInteraction.Drop();
                         }
-                    if (RcontrollerInteraction.currentTransform != null)
-                        if (RcontrollerInteraction.currentTransform.GetInstanceID() == currentLinkedGroup.transform.GetInstanceID())
+                    }
+
+                    if (rightControllerInteraction.currentTransform != null)
+                    {
+                        if (rightControllerInteraction.currentTransform.GetInstanceID() == currentGroup.transform.GetInstanceID())
                         {
-                            RcontrollerInteraction.Drop();
-
+                            rightControllerInteraction.Drop();
                         }
+                    }
 
-                    currentLinkedGroup.parentOfCollection.DetachChildren();
-                    linkedGroupDictionary.Remove(id);
+                    currentGroup.groupsParent.DetachChildren();
+                    groups.Remove(groupID);
 
-                    Destroy(currentLinkedGroup.gameObject);
+                    Destroy(currentGroup.gameObject);
                 }
             }
 
             //send call if it was a client call
-            if (!collider.TryGetComponent<LinkedGroup>(out LinkedGroup lgnew))
-                if (customID == -1)
+            if (!collider.TryGetComponent<Group>(out Group lgnew))
+            {
+                if (otherClientID == -1)
                 {
-                    SendNetworkMessage(collider.GetComponent<NetworkedGameObject>().thisEntityID, id, false);
-
+                    SendGroupUpdate(collider.GetComponent<NetworkedGameObject>().thisEntityID, groupID, false);
                 }
-
+            }
         }
-
-        //public void RemoveFromLinkedGroup1(Collider collider, int customID = -1)
-        //{
-        //    if (!collider.CompareTag("Interactable"))
-        //        return;
-
-        //    //to check if this is a call from the client or external clients
-        //    var id = 0;
-
-        //    if (customID == -1)
-        //        id = userId;
-        //    else
-        //        id = customID;
-
-
-        //    //disable main collider of the linkedgroup to access its child group item colliders
-        //    if (collider.TryGetComponent(out LinkedGroup lg))
-        //    {
-        //        currentLinkedGroup = lg;
-
-        //        //disable main collider and enable the child elements to remove from main
-        //        lg.transform.GetComponent<BoxCollider>().enabled = false;
-
-        //        lg.meshRend = lg.GetComponent<MeshRenderer>();
-
-        //        StartCoroutine(RenableParentColliderOutsideRenderBounds(lg.meshRend));
-        //        //   if(lg.transform.childCount > 0)
-        //        foreach (Transform colItems in lg.transform.GetChild(0))
-        //            colItems.GetComponent<Collider>().enabled = true;
-
-        //        return;
-        //    }
-
-        //    if (!linkedGroupDictionary.ContainsKey(id))
-        //        return;
-
-        //    currentLinkedGroup = linkedGroupDictionary[id];
-
-        //    //handle the items that we touch
-        //    if (currentLinkedGroup)
-        //    {
-        //        //if (lg.transform.childCount == 0 )
-        //        //{
-        //        //    Destroy(lg.gameObject);
-        //        //    linkedGroups.Remove(id);
-        //        //    return;
-        //        //}
-
-        //        if (collider.transform.IsChildOf(currentLinkedGroup.transform.GetChild(0)))
-        //        {
-        //            collider.transform.parent = null;
-        //            currentLinkedGroup.groupListCollection.Remove(collider);
-
-        //            currentLinkedGroup.RefreshLinkedGroup();
-
-        //            if (currentLinkedGroup.transform.GetChild(0).childCount == 0)
-        //            {
-        //                ////RE-enable our grabing funcionality by droping destroyed object
-        //                if (LcontrollerInteraction.currentTransform != null)
-        //                    if (LcontrollerInteraction.currentTransform.GetInstanceID() == currentLinkedGroup.transform.GetInstanceID())
-        //                    {
-        //                        LcontrollerInteraction.Drop();
-
-        //                    }
-        //                if (RcontrollerInteraction.currentTransform != null)
-        //                    if (RcontrollerInteraction.currentTransform.GetInstanceID() == currentLinkedGroup.transform.GetInstanceID())
-        //                    {
-        //                        RcontrollerInteraction.Drop();
-
-        //                    }
-
-
-        //                Destroy(currentLinkedGroup.gameObject);
-        //                linkedGroupDictionary.Remove(id);
-
-
-        //            }
-
-
-        //        }
-        //    }
-
-        //    //send call if it was a client call
-        //    if (!collider.TryGetComponent<LinkedGroup>(out LinkedGroup lgnew))
-        //        if (customID == -1)
-        //        {
-        //            SendNetworkMessage(collider.GetComponent<NetworkedGameObject>().thisEntityID, id, false);
-
-        //        }
-
-        //    //currentLinkedGroup.transform.GetComponent<BoxCollider>().enabled = true;
-
-        //    //foreach (Transform colItems in lg.transform.GetChild(0))
-        //    //    colItems.GetComponent<Collider>().enabled = false;
-
-
-
-        //}
-
-        public void ExitedLinkGroup(LinkedGroup lg)
+        public void ExitGroup(Group lg)
         {
             if (lg)
             {
                 lg.transform.GetComponent<BoxCollider>().enabled = true;
 
                 foreach (Transform colItems in lg.transform.GetChild(0))
+                {
                     colItems.GetComponent<Collider>().enabled = false;
+                }
             }
         }
 
-
-        public IEnumerator RenableParentColliderOutsideRenderBounds(MeshRenderer lgRend)
+        public IEnumerator ReenableParentColliderOutsideRenderBounds(MeshRenderer lgRend)
         {
+            yield return new WaitUntil(() =>
+            {
+                if (lgRend == null)
+                {
+                    return true;
+                }
 
-           // Debug.Log("i am in");
-
-            yield return new WaitUntil(() => { if (lgRend == null) return true; if (!lgRend.bounds.Contains(LcontrollerInteraction.transform.position) && !lgRend.bounds.Contains(RcontrollerInteraction.transform.position)) return true; else return false; });
+                if (!lgRend.bounds.Contains(leftControllerInteraction.transform.position) && 
+                    !lgRend.bounds.Contains(rightControllerInteraction.transform.position))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            });
 
             if (lgRend == null)
+            {
                 yield break;
+            }
 
-         //       Debug.Log("i am out");
             lgRend.transform.GetComponent<BoxCollider>().enabled = true;
 
             foreach (Transform colItems in lgRend.transform.GetChild(0))
+            {
                 colItems.GetComponent<Collider>().enabled = false;
-
+            }
         }
 
-        public void GroupRefresh(string message)
+        public void ReceiveGroupUpdate(string message)
         {
             GroupProperties data = JsonUtility.FromJson<GroupProperties>(message);
 
             if (data.isAdding)
-                AddToLinkedGroup(ClientSpawnManager.Instance.networkedObjectFromEntityId[data.entityID].GetComponent<Collider>(), data.groupID);
-            else
-                RemoveFromLinkedGroup(ClientSpawnManager.Instance.networkedObjectFromEntityId[data.entityID].GetComponent<Collider>(), data.groupID);
-
-        }
-      
-        public void UpdateLinkedGroup(LinkedGroup linkParent)
-        {
-            List<Transform> childList = new List<Transform>();
-            var rootParent = linkParent.transform;
-            var parentOfCollection = linkParent.parentOfCollection;
-
-
-            Bounds newBound = default;
-            if (linkParent.groupListCollection.Count != 0)
-                newBound = new Bounds(linkParent.groupListCollection[0].transform.position, Vector3.one * 0.02f);// new Bounds();
+            {
+                AddToGroup(ClientSpawnManager.Instance.networkedObjectFromEntityId[data.entityID].GetComponent<Collider>(), data.groupID);
+            }
             else
             {
-              
+                RemoveFromGroup(ClientSpawnManager.Instance.networkedObjectFromEntityId[data.entityID].GetComponent<Collider>(), data.groupID);
+            }
+        }
 
+        public void UpdateGroup(Group linkParent)
+        {
+            List<Transform> childList = new List<Transform>();
+
+            var rootParent = linkParent.transform;
+
+            var parentOfCollection = linkParent.groupsParent;
+
+            Bounds newBound = default;
+
+            if (linkParent.groups.Count != 0)
+            {
+                newBound = new Bounds(linkParent.groups[0].transform.position, Vector3.one * 0.02f);// new Bounds();
+            }
+            else
+            {
                 return;
             }
-
 
             for (int i = 0; i < rootParent.GetChild(0).childCount; i++)
             {
                 childList.Add(parentOfCollection.GetChild(i));
 
-                var col = parentOfCollection.GetChild(i).GetComponent<Collider>();//capturedObjects[i];//uniqueIdToParentofLinks[currentIDworkingWith].collectedColliders[i];
+                var col = parentOfCollection.GetChild(i).GetComponent<Collider>();
 
                 //set new collider bounds
                 newBound.Encapsulate(new Bounds(col.transform.position, col.bounds.size));
-
             }
 
             rootParent.transform.DetachChildren();
+
             parentOfCollection.transform.DetachChildren();
 
-            rootParent.position = newBound.center;//newLinkParentCollider.transform.position;
+            rootParent.position = newBound.center;
+
             rootParent.SetGlobalScale(newBound.size);
 
             rootParent.rotation = Quaternion.identity;
@@ -497,16 +563,18 @@ namespace Komodo.IMPRESS
             parentOfCollection.rotation = Quaternion.identity;
 
             if (rootParent.TryGetComponent(out Collider boxCollider))
+            {
                 Destroy(boxCollider);
+            }
 
             rootParent.gameObject.AddComponent<BoxCollider>();
 
             foreach (var item in childList)
+            {
                 item.transform.SetParent(parentOfCollection.transform, true);
-
+            }
 
             parentOfCollection.transform.SetParent(rootParent.transform, true);
-
         }
     }
 }
