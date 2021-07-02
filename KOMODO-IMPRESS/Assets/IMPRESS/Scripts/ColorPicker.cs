@@ -12,6 +12,7 @@ namespace Komodo.IMPRESS
 
         public List<TriggerDraw> triggers;
 
+        public Camera handCamera;
 
         [Tooltip("Requires a RectTransform and a RawImage component with a texture in it. Assumes its image completely fills its RectTransform.")]
         public GameObject colorImageObject;
@@ -131,9 +132,9 @@ namespace Komodo.IMPRESS
                 return new Vector2(localX, localY);
             }
 
-            Debug.LogError("Error calling ScreenPointToLocalPointInRectangle");
+            // The user clicked outside the color picker.
 
-            return new Vector2(0.12345f, 0.67890f);
+            return new Vector2(-12345f, -12345f);
         }
 
         private Color GetPixelFromLocalPosition (Texture2D texture, Vector2 localPosition)

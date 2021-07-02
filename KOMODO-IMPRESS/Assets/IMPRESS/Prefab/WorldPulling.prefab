@@ -1,5 +1,58 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3249557296278740707
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 307061942979009991}
+  - component: {fileID: 1206519868985111302}
+  m_Layer: 0
+  m_Name: LayerVisibility
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &307061942979009991
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3249557296278740707}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4935357643860465855}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1206519868985111302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3249557296278740707}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73210aabcb7f44349843562f770a1260, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cameras:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  layersToToggle:
+  - Walkable
+  - Enclosure
 --- !u!1 &4935357643860465854
 GameObject:
   m_ObjectHideFlags: 0
@@ -30,6 +83,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1149998305953642101}
+  - {fileID: 307061942979009991}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -45,26 +99,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: debdd6d91d87b624d876090dcc21992a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offsetLimits: {x: -0.05, y: 0.8}
-  animalScaleMaterial: {fileID: 1128748475593155725}
+  scaleMin: 0.835
+  scaleMax: 1.94
+  debugAxes: {fileID: 7500337663012258881, guid: 2d19101d6d3ac6c438d33c092cc080b1,
+    type: 3}
+  initialPlayspacePosition: {x: 0, y: 0, z: 0}
+  animalRulerMesh: {fileID: 1128748475593155725}
   animalRuler: {fileID: 1149998305953642101}
-  currentEnvironment: {fileID: 0}
+  physicalFloor: {fileID: 0}
+  layerManager: {fileID: 1206519868985111302}
   originalParentOfFirstHandTransform: {fileID: 0}
-  secondObjectGrabbed: {fileID: 0}
-  originalParentOfSecondHandTransform: {fileID: 0}
-  handReferences:
+  hands:
   - {fileID: 0}
   - {fileID: 0}
-  isDoubleGrabbing: 0
-  pivotRootTransform: {fileID: 0}
-  doubleGrabRotateCoordinate: {fileID: 0}
-  isInitialDoubleGrab: 0
-  orientedPlayer: {x: 0, y: 0, z: 0}
-  orientedPlayerTest: {fileID: 0}
-  rotationToRotateTo: {x: 0, y: 0, z: 0, w: 0}
-  initialY: 0
-  initialXRY: 0
-  desktopCamera: {fileID: 0}
+  pivotPointsParent: {fileID: 0}
+  pivotPoint0: {fileID: 0}
+  doUpdateInitialValues: 0
+  player: {fileID: 0}
+  xrPlayer: {fileID: 0}
+  teleportPlayer: {fileID: 0}
+  initialPlayerRotation: {x: 0, y: 0, z: 0, w: 0}
+  initialScale: 1
 --- !u!120 &4935357643860465841
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -230,11 +285,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4596838979821827066, guid: daf0403643072614da0823f12f723b9b,
+        type: 3}
+      propertyPath: thisTransform
+      value: 
+      objectReference: {fileID: 1149998300773490501}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: daf0403643072614da0823f12f723b9b, type: 3}
 --- !u!4 &1149998305953642101 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4349173823246470787, guid: daf0403643072614da0823f12f723b9b,
+    type: 3}
+  m_PrefabInstance: {fileID: 3724129246036261110}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1149998300773490501 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4349173828971816883, guid: daf0403643072614da0823f12f723b9b,
     type: 3}
   m_PrefabInstance: {fileID: 3724129246036261110}
   m_PrefabAsset: {fileID: 0}
