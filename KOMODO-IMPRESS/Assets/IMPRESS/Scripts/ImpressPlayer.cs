@@ -8,6 +8,8 @@ namespace Komodo.IMPRESS
     {
         public TriggerCreatePrimitive triggerCreatePrimitiveLeft;
 
+        public TriggerCreatePrimitive triggerCreatePrimitiveRight;
+
         public TriggerGroup triggerGroupLeft;
 
         public TriggerUngroup triggerUngroupRight;
@@ -21,6 +23,11 @@ namespace Komodo.IMPRESS
             if (triggerCreatePrimitiveLeft == null)
             {
                 throw new UnassignedReferenceException("triggerCreatePrimitiveLeft");
+            }
+
+            if (triggerCreatePrimitiveRight == null)
+            {
+                throw new UnassignedReferenceException("triggerCreatePrimitiveRight");
             }
 
             if (!triggerGroupLeft)

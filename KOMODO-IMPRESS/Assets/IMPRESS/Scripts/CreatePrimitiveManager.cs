@@ -40,11 +40,13 @@ namespace Komodo.IMPRESS
 
         public ImpressPlayer player;
 
+        private bool _isRightHanded;
+
         EntityManager entityManager;
 
         Transform primitiveCreationParent;
 
-        private TriggerCreatePrimitive _primitiveAnchor;
+        private TriggerCreatePrimitive _primitiveTrigger;
 
         private int _primitiveID = 0;
 
@@ -55,6 +57,10 @@ namespace Komodo.IMPRESS
         private UnityAction _enable;
 
         private UnityAction _disable;
+
+        private UnityAction _setLeftHanded;
+
+        private UnityAction _setRightHanded;
 
         private UnityAction _selectSphere;
 
@@ -89,17 +95,17 @@ namespace Komodo.IMPRESS
             {
                 throw new MissingReferenceException("ghostCube");
             }
-            
+
             if (ghostCylinder == null)
             {
                 throw new MissingReferenceException("ghostCylinder");
             }
-            
+
             if (ghostPlane == null)
             {
                 throw new MissingReferenceException("ghostPlane");
             }
-            
+
             if (ghostSphere == null)
             {
                 throw new MissingReferenceException("ghostSphere");
@@ -110,6 +116,8 @@ namespace Komodo.IMPRESS
         {
             _isEnabled = false;
 
+            _isRightHanded = false;
+
             // force-create an instance
             var initManager = Instance;
 
@@ -117,21 +125,41 @@ namespace Komodo.IMPRESS
 
             primitiveCreationParent = new GameObject("CreatedPrimitives").transform;
 
-            InitializeAnchors();
+            InitializeTriggerAndGhost(_isRightHanded);
 
             InitializeListeners();
 
             GlobalMessageManager.Instance.Subscribe("primitive", (str) => ReceivePrimitiveUpdate(str));
         }
 
-        public void InitializeAnchors ()
+        private void _SetLeftHanded ()
         {
-            _primitiveAnchor = default;
+            _isRightHanded = false;
 
-            //set our display's parent to our hand
+            InitializeTriggerAndGhost(false);
+        }
+
+        private void _SetRightHanded ()
+        {
+            _isRightHanded = true;
+
+            InitializeTriggerAndGhost(true);
+        }
+
+        public void InitializeTriggerAndGhost (bool _isRightHanded)
+        {
+            if (_isRightHanded)
+            {
+                ghostPrimitivesParent.SetParent(playerRefs.handR.transform, true);
+
+                _primitiveTrigger = player.triggerCreatePrimitiveRight;
+
+                return;
+            }
+
             ghostPrimitivesParent.SetParent(playerRefs.handL.transform, true);
 
-            _primitiveAnchor = player.triggerCreatePrimitiveLeft;
+            _primitiveTrigger = player.triggerCreatePrimitiveLeft;
         }
 
         private void _Enable ()
@@ -140,7 +168,7 @@ namespace Komodo.IMPRESS
 
             _ToggleGhostPrimitive(true);
 
-            _primitiveAnchor.gameObject.SetActive(true);
+            _primitiveTrigger.gameObject.SetActive(true);
         }
 
         private void _Disable ()
@@ -151,7 +179,7 @@ namespace Komodo.IMPRESS
 
             _ToggleGhostPrimitive(false);
 
-            _primitiveAnchor.gameObject.SetActive(false);
+            _primitiveTrigger.gameObject.SetActive(false);
         }
 
         private void _DeselectSphere ()
@@ -224,6 +252,14 @@ namespace Komodo.IMPRESS
 
             ImpressEventManager.StartListening("primitiveTool.disable", _disable);
 
+            _setLeftHanded += _SetLeftHanded;
+
+            ImpressEventManager.StartListening("primitiveTool.setLeftHanded", _setLeftHanded);
+
+            _setRightHanded += _SetRightHanded;
+
+            ImpressEventManager.StartListening("primitiveTool.setRightHanded", _setRightHanded);
+
             _selectSphere += _SelectSphere;
 
             ImpressEventManager.StartListening("primitiveTool.selectSphere", _selectSphere);
@@ -265,15 +301,15 @@ namespace Komodo.IMPRESS
             ImpressEventManager.StartListening("primitiveTool.deselectCylinder", _deselectCylinder);
         }
 
-        private void TogglePrimitive (bool state, int index) 
+        private void TogglePrimitive (bool state, int index)
         {
-            GetCurrentToggle(state); 
+            GetCurrentToggle(state);
 
-            DeactivateAllChildren(); 
+            DeactivateAllChildren();
 
             ghostPrimitivesParent.GetChild(index).gameObject.SetActive(true);
 
-            _primitiveAnchor.gameObject.SetActive(state);
+            _primitiveTrigger.gameObject.SetActive(state);
         }
 
         private void _ToggleGhostPrimitive (bool state)
@@ -332,36 +368,6 @@ namespace Komodo.IMPRESS
 
             var scale = primitive.transform.lossyScale;
 
-            /* TODO(Brandon) - remove
-            for (int i = 0; i < toggleButtons.Length; i += 1)
-            {
-                if (currentToggle.GetInstanceID() == toggleButtons[i].GetInstanceID())
-                {
-                    //var vals = Enum.GetValues(typeof(PrimitiveType));
-                    if(0 == i)
-                    _currentType = PrimitiveType.Sphere;
-
-                    else if(1 == i)
-                    _currentType = PrimitiveType.Capsule;
-
-                    else if (2 == i)
-                        _currentType = PrimitiveType.Cylinder;
-
-                    else if (3 == i)
-                        _currentType = PrimitiveType.Cube;
-                        
-                    else if (4 == i)
-                        _currentType = PrimitiveType.Plane;
-
-                    rot = ghostPrimitivesParent.GetChild(i).rotation;
-
-                    scale = ghostPrimitivesParent.GetChild(i).lossyScale;
-
-                    break;
-                }
-            }
-            */
-
             primitive = GameObject.CreatePrimitive(_currentType);
 
             //add a box collider instead, cant grab objects with different colliders in WebGL build for some reason
@@ -374,7 +380,7 @@ namespace Komodo.IMPRESS
             NetworkedGameObject netObject = ClientSpawnManager.Instance.CreateNetworkedGameObject(primitive);
 
             //tag it to be used with ECS system
-            entityManager.AddComponentData(netObject.Entity, new PrimitiveTag { });
+            entityManager.AddComponentData(netObject.Entity, new PrimitiveTag());
 
             primitive.tag = "Interactable";
 
@@ -386,16 +392,16 @@ namespace Komodo.IMPRESS
 
             primitive.transform.SetParent(primitiveCreationParent.transform, true);
 
-            _primitiveID = 100000000 + 10000000 + NetworkUpdateHandler.Instance.client_id * 10000 + _strokeIndex;
+            _primitiveID = 100000000 + 10000000 + (NetworkUpdateHandler.Instance.client_id * 10000) + _strokeIndex;
 
             _strokeIndex++;
 
             var rot2 = primitive.transform.rotation;
 
             SendPrimitiveUpdate(
-                _primitiveID, 
-                (int) _currentType, 
-                primitive.transform.lossyScale.x, 
+                _primitiveID,
+                (int) _currentType,
+                primitive.transform.lossyScale.x,
                 primitive.transform.position,
                 new Vector4(rot2.x, rot2.y, rot2.z, rot2.w)
             );
@@ -418,10 +424,10 @@ namespace Komodo.IMPRESS
         public void SendPrimitiveUpdate(int sID, int primitiveType, float scale = 1, Vector3 primitivePos = default, Vector4 primitiveRot = default)
         {
             var drawUpdate = new Primitive(
-                (int)NetworkUpdateHandler.Instance.client_id, 
-                sID, 
-                (int)primitiveType,
-                scale, 
+                (int) NetworkUpdateHandler.Instance.client_id,
+                sID,
+                (int) primitiveType,
+                scale,
                 primitivePos,
                 primitiveRot
             );
