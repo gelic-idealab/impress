@@ -36,9 +36,9 @@ namespace Komodo.IMPRESS
 
         public Toggle currentToggle;
 
-        public PlayerReferences playerRefs;
-
         public ImpressPlayer player;
+
+        public ToolPlacement toolPlacement;
 
         private bool _isRightHanded;
 
@@ -110,6 +110,11 @@ namespace Komodo.IMPRESS
             {
                 throw new MissingReferenceException("ghostSphere");
             }
+
+            if (toolPlacement == null)
+            {
+                throw new MissingReferenceException("toolPlacement");
+            }
         }
 
         public void Awake()
@@ -125,39 +130,45 @@ namespace Komodo.IMPRESS
 
             primitiveCreationParent = new GameObject("CreatedPrimitives").transform;
 
-            InitializeTriggerAndGhost(_isRightHanded);
+            InitializeTriggerAndGhost();
 
             InitializeListeners();
 
             GlobalMessageManager.Instance.Subscribe("primitive", (str) => ReceivePrimitiveUpdate(str));
         }
 
-        private void _SetLeftHanded ()
+        public void InitializeTriggerAndGhost ()
         {
-            _isRightHanded = false;
+            ToolAnchor anchor = toolPlacement.GetCurrentToolAnchor();
 
-            InitializeTriggerAndGhost(false);
-        }
-
-        private void _SetRightHanded ()
-        {
-            _isRightHanded = true;
-
-            InitializeTriggerAndGhost(true);
-        }
-
-        public void InitializeTriggerAndGhost (bool _isRightHanded)
-        {
-            if (_isRightHanded)
+            if (!anchor || !anchor.transform)
             {
-                ghostPrimitivesParent.SetParent(playerRefs.handR.transform, true);
+                Debug.LogWarning("Could not find a proper tool parent, so setting it to the screen by default.");
 
+                toolPlacement.SetCurrentToolAnchor(ToolAnchor.Kind.SCREEN);
+
+                anchor = toolPlacement.GetCurrentToolAnchor();
+            }
+
+            ghostPrimitivesParent.SetParent(anchor.transform, false);
+
+            ghostPrimitivesParent.transform.localPosition = new Vector3(0, 0, 0);
+
+            if (anchor.kind == ToolAnchor.Kind.RIGHT_HANDED)
+            {
                 _primitiveTrigger = player.triggerCreatePrimitiveRight;
 
                 return;
             }
 
-            ghostPrimitivesParent.SetParent(playerRefs.handL.transform, true);
+            if (anchor.kind == ToolAnchor.Kind.LEFT_HANDED)
+            {
+                _primitiveTrigger = player.triggerCreatePrimitiveLeft;
+
+                return;
+            }
+
+            // TODO - use a screen-based tool trigger here, instead of this left-handed trigger.
 
             _primitiveTrigger = player.triggerCreatePrimitiveLeft;
         }
@@ -165,6 +176,8 @@ namespace Komodo.IMPRESS
         private void _Enable ()
         {
             _isEnabled = true;
+
+            InitializeTriggerAndGhost();
 
             _ToggleGhostPrimitive(true);
 
@@ -176,6 +189,8 @@ namespace Komodo.IMPRESS
             _isEnabled = false;
 
             _currentType = default;
+
+            InitializeTriggerAndGhost();
 
             _ToggleGhostPrimitive(false);
 
@@ -251,14 +266,6 @@ namespace Komodo.IMPRESS
             _disable += _Disable;
 
             ImpressEventManager.StartListening("primitiveTool.disable", _disable);
-
-            _setLeftHanded += _SetLeftHanded;
-
-            ImpressEventManager.StartListening("primitiveTool.setLeftHanded", _setLeftHanded);
-
-            _setRightHanded += _SetRightHanded;
-
-            ImpressEventManager.StartListening("primitiveTool.setRightHanded", _setRightHanded);
 
             _selectSphere += _SelectSphere;
 

@@ -225,17 +225,11 @@ namespace Komodo.IMPRESS
                 ImpressEventManager.TriggerEvent("primitiveTool.deselectPlane");
             });
 
-            ImpressEventManager.StartListening("menu.setRightHanded", () =>
-            {
-            });
-
-            ImpressEventManager.StartListening("menu.setLeftHanded", () =>
-            {
-            });
-
             groupTab.onTabSelected.AddListener(() =>
             {
                 ImpressEventManager.TriggerEvent("groupTool.showGroups");
+
+                // Comment so linter doesn't say to use expression-bodied lambda
             });
 
             groupTab.onTabDeselected.AddListener(() =>
@@ -243,7 +237,7 @@ namespace Komodo.IMPRESS
                 ImpressEventManager.TriggerEvent("groupTool.hideGroups");
 
                 ImpressEventManager.TriggerEvent("groupTool.disableGrouping");
-                
+
                 ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
             });
 

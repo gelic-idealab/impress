@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/IMPRESS/Scene/IMPRESSMain2.unity
+    path: Assets/IMPRESS/Scene/Main.unity
     guid: 3f83561dfa14d984f92589b4a350a47f
   - enabled: 1
     path: Assets/IMPRESS/Scene/OutsideTheMilkyWay.unity
