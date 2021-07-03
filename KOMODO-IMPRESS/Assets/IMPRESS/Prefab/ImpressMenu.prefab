@@ -9826,6 +9826,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7700205267839848467}
     m_Modifications:
+    - target: {fileID: 419521300251511180, guid: d33cf533d5183984ea5c8045f7f3620b,
+        type: 3}
+      propertyPath: menuPlacement
+      value: 
+      objectReference: {fileID: 4193681595172214892}
     - target: {fileID: 662615351084646781, guid: d33cf533d5183984ea5c8045f7f3620b,
         type: 3}
       propertyPath: m_AnchorMax.y

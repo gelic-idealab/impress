@@ -129,7 +129,7 @@ namespace Komodo.IMPRESS
 
             drawTab.onTabSelected.AddListener(() =>
             {
-                // do nothing.
+                ImpressEventManager.TriggerEvent("drawTool.enable");
             });
 
             drawTab.onTabDeselected.AddListener(() =>

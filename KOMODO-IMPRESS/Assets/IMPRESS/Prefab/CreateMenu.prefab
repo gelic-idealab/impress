@@ -1394,6 +1394,81 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Sun
+--- !u!1 &4289160650916143844
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3338787798853894153}
+  - component: {fileID: 3590414236350109157}
+  - component: {fileID: 2484961357655269246}
+  m_Layer: 5
+  m_Name: PreviewColorCursor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &3338787798853894153
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4289160650916143844}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 6109806833998307284}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 15, y: 15}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &3590414236350109157
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4289160650916143844}
+  m_CullTransparentMesh: 0
+--- !u!114 &2484961357655269246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4289160650916143844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.5882353}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 6e521054104d5cb48991813e20aa6e15, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &4324063303359911890
 GameObject:
   m_ObjectHideFlags: 0
@@ -9299,6 +9374,7 @@ GameObject:
   - component: {fileID: 3102510497064314798}
   - component: {fileID: 6109806833988621852}
   - component: {fileID: 419521300251511180}
+  - component: {fileID: 9149294787200276143}
   m_Layer: 5
   m_Name: ColorImage
   m_TagString: Untagged
@@ -9388,11 +9464,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineRenderers: []
   triggers: []
+  handCamera: {fileID: 0}
   colorImageObject: {fileID: 6109806833988621855}
-  selectedColorCursor: {fileID: 6109806834180028965}
-  previewColorCursor: {fileID: 0}
+  selectedColorCursor: {fileID: 6109806834180028964}
+  previewColorCursor: {fileID: 4289160650916143844}
   selectedColorDisplay: {fileID: 5066473465838698207}
   previewColorDisplay: {fileID: 8955161983510957910}
+  menuPlacement: {fileID: 0}
+--- !u!114 &9149294787200276143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6109806833988621855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 598234470ed8015488ad0e722146ac2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 3338787798853894153}
 --- !u!1 &6109806833998307286
 GameObject:
   m_ObjectHideFlags: 0
@@ -9421,6 +9512,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6109806834180028965}
+  - {fileID: 3338787798853894153}
   m_Father: {fileID: 2599532041970568165}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
@@ -9436,7 +9528,7 @@ GameObject:
   - component: {fileID: 6109806834180028968}
   - component: {fileID: 6109806834180028971}
   m_Layer: 5
-  m_Name: ColorCursor
+  m_Name: SelectedColorCursor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9458,7 +9550,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -1.95}
   m_SizeDelta: {x: 15, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6109806834180028968

@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using Komodo.Runtime;
+using System;
 
 namespace Komodo.IMPRESS
 {
@@ -17,13 +19,15 @@ namespace Komodo.IMPRESS
         [Tooltip("Requires a RectTransform and a RawImage component with a texture in it. Assumes its image completely fills its RectTransform.")]
         public GameObject colorImageObject;
 
-        public Transform selectedColorCursor;
+        public GameObject selectedColorCursor;
 
-        public Transform previewColorCursor;
+        public GameObject previewColorCursor;
 
         public Image selectedColorDisplay;
 
         public Image previewColorDisplay;
+
+        public MenuPlacement menuPlacement;
         /*  
 
         /!\ Don't forget to make the texture readable. Select your texture in the Inspector. Choose [Texture Import Setting] > Texture Type > Advanced > Read/Write enabled > True, then Apply.
@@ -33,19 +37,37 @@ namespace Komodo.IMPRESS
 
         private RectTransform colorRectTransform;
 
-        private Vector2 selectedColorCursorLocalPosition;
+        private Vector2 selectedColorCursorNormalizedPosition;
 
-        private Vector2 previewColorCursorLocalPosition;
+        private Vector2 previewColorCursorNormalizedPosition;
 
         private bool _isPreviewing;
 
-        private bool _isSelectingWithMouse;
+        private bool _isDragging;
+
+        private bool _isInVR;
+
+        private UnityAction _enable;
+
+        private UnityAction _disable;
+
+        private RectTransform previewColorCursorRectTransform;
+
+        private RectTransform selectedColorCursorRectTransform;
 
         private void Awake()
         {
             _isPreviewing = false;
 
-            _isSelectingWithMouse = false;
+            _isDragging = false;
+        }
+
+        public void Start()
+        {
+            if (!menuPlacement)
+            {
+                throw new UnassignedReferenceException("menuPlacement");
+            }
 
             if (!colorImageObject)
             {
@@ -86,11 +108,40 @@ namespace Komodo.IMPRESS
 
                 triggers.Add(triggerDraw);
             }
-        }
 
-        public void Start()
-        {
+            if (!selectedColorCursor.transform)
+            {
+                throw new MissingFieldException("transform on selectedColorCursor");
+            }
+
+            if (!previewColorCursor.transform)
+            {
+                throw new MissingFieldException("transform on previewColorCursor");
+            }
+
+            previewColorCursorRectTransform = previewColorCursor.GetComponent<RectTransform>();
+
+            if (!previewColorCursorRectTransform)
+            {
+                throw new MissingComponentException("RectTransform on previewColorCursor");
+            }
+
+            selectedColorCursorRectTransform = selectedColorCursor.GetComponent<RectTransform>();
+
+            if (!selectedColorCursorRectTransform)
+            {
+                throw new MissingComponentException("RectTransform on selectedColorCursor");
+            }
+
             TryGrabPlayerDrawTargets();
+
+            _enable += Enable;
+
+            ImpressEventManager.StartListening("drawTool.enable", _enable);
+
+            _disable += Disable;
+
+            ImpressEventManager.StartListening("drawTool.disable", _disable);
         }
 
         public void TryGrabPlayerDrawTargets()
@@ -111,10 +162,12 @@ namespace Komodo.IMPRESS
             {
                 // pressEventCamera was null for PointerEventData. This is expected for Screen Space - Overlay canvases, but not otherwise.
 
+                // For some reason, in VR mode, pressEventCamera is null.
+
                 //TODO - catch errors for VR mode.
             }
 
-            return GetMouseLocalPositionInRect(rectTransform, data.position.x, data.position.y, data.pressEventCamera);
+            return GetMouseLocalPositionInRect(rectTransform, data.position.x, data.position.y, data.enterEventCamera);
         }
 
         // Should return x and y values between 0 and 1, measuring from the upper-left corner of the rect.
@@ -137,13 +190,26 @@ namespace Komodo.IMPRESS
             return new Vector2(-12345f, -12345f);
         }
 
-        private Color GetPixelFromLocalPosition (Texture2D texture, Vector2 localPosition)
+        private Vector2 g3dcnpir;
+
+        private Vector2 Get3DCursorNormalizedPositionInRect (RectTransform rectTransform, float localX, float localZ)
         {
-            float localYFromBottom = (localPosition.y * -1f) + 1f;
+            float normX = localX / rectTransform.rect.width;
 
-            int textureY = (int) (localYFromBottom * texture.height);
+            float normY = Mathf.Abs(localZ / rectTransform.rect.height);
 
-            int textureX = (int) (localPosition.x * texture.width);
+            g3dcnpir = new Vector2(normX, normY);
+
+            return new Vector2(normX, normY);
+        }
+
+        private Color GetPixelFromNormalizedPosition (Texture2D texture, Vector2 normalizedPosition)
+        {
+            float normYFromBottom = (normalizedPosition.y * -1f) + 1f;
+
+            int textureY = (int) (normYFromBottom * texture.height);
+
+            int textureX = (int) (normalizedPosition.x * texture.width);
 
             return texture.GetPixel(textureX, textureY);
         }
@@ -163,27 +229,60 @@ namespace Komodo.IMPRESS
             displayObject.color = color;
         }
 
+        private void Enable ()
+        {
+            MenuAnchor anchor = menuPlacement.GetCurrentMenuAnchor();
+
+            if (anchor.kind == MenuAnchor.Kind.SCREEN)
+            {
+                _isInVR = false;
+
+                return;
+            }
+
+            _isInVR = true;
+        }
+
+        private void Disable ()
+        {
+            // do nothing.
+        }
+
         public void Update()
         {
             if (_isPreviewing)
             {
-                previewColorCursorLocalPosition = GetMouseLocalPositionInRect(colorRectTransform, Input.mousePosition.x, Input.mousePosition.y, null);
+                if(!_isInVR)
+                {
+                    previewColorCursorNormalizedPosition = GetMouseLocalPositionInRect(colorRectTransform, Input.mousePosition.x, Input.mousePosition.y, null);
+                }
+                else
+                {
+                    previewColorCursorNormalizedPosition = Get3DCursorNormalizedPositionInRect(colorRectTransform,previewColorCursorRectTransform.localPosition.x, previewColorCursorRectTransform.localPosition.z);
+                }
 
-                Color previewColor = GetPixelFromLocalPosition(colorTexture, previewColorCursorLocalPosition);
+                Color previewColor = GetPixelFromNormalizedPosition(colorTexture, previewColorCursorNormalizedPosition);
 
                 DisplayColor(previewColorDisplay, previewColor);
             }
 
-            if (_isSelectingWithMouse)
+            if (_isDragging)
             {
-                selectedColorCursorLocalPosition = GetMouseLocalPositionInRect(colorRectTransform, Input.mousePosition.x, Input.mousePosition.y, null);
+                if(!_isInVR)
+                {
+                    selectedColorCursorNormalizedPosition = GetMouseLocalPositionInRect(colorRectTransform, Input.mousePosition.x, Input.mousePosition.y, null);
+                }
+                else
+                {
+                    selectedColorCursorNormalizedPosition = Get3DCursorNormalizedPositionInRect(colorRectTransform, selectedColorCursorRectTransform.localPosition.x, selectedColorCursorRectTransform.localPosition.z);
+                }
+
+                Color selectedColor = GetPixelFromNormalizedPosition(colorTexture, selectedColorCursorNormalizedPosition);
+
+                DisplayColor(selectedColorDisplay, selectedColor);
+
+                SetLineRenderersColor(lineRenderers, selectedColor);
             }
-
-            Color selectedColor = GetPixelFromLocalPosition(colorTexture, selectedColorCursorLocalPosition);
-
-            DisplayColor(selectedColorDisplay, selectedColor);
-
-            SetLineRenderersColor(lineRenderers, selectedColor);
         }
 
         private void ShowPreviewColor ()
@@ -199,9 +298,9 @@ namespace Komodo.IMPRESS
         // Change color marker to match image selection location
         public void OnPointerClick(PointerEventData eventData)
         {
-            selectedColorCursor.position = Input.mousePosition;
+            selectedColorCursor.transform.position = Input.mousePosition;
 
-            selectedColorCursorLocalPosition = GetMouseLocalPositionInRectFromPointerEventData(colorRectTransform, eventData);
+            selectedColorCursorNormalizedPosition = GetMouseLocalPositionInRectFromPointerEventData(colorRectTransform, eventData);
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -230,15 +329,15 @@ namespace Komodo.IMPRESS
 
         public void OnPointerDown (PointerEventData eventData)
         {
-            _isSelectingWithMouse = true;
+            _isDragging = true;
         }
 
         public void OnPointerUp (PointerEventData eventData)
         {
-            _isSelectingWithMouse = false;
+            _isDragging = false;
         }
 
-        // Stop selecting color picker, because OnPointerExit will not fire if the GameObject is disabled.
+        // Stop selecting color, because OnPointerExit will not fire if the GameObject is disabled.
         public void OnDisable()
         {
             foreach (var item in triggers)
