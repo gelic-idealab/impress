@@ -206,8 +206,6 @@ namespace Komodo.IMPRESS
         [ContextMenu("Start World Pulling")]
         public void StartWorldPulling()
         {
-            Debug.Log("Starting world pulling");
-
             UpdateInitialValues();
 
             animalRuler.gameObject.SetActive(true);
@@ -228,8 +226,6 @@ namespace Komodo.IMPRESS
         [ContextMenu("Stop World Pulling")]
         public void StopWorldPulling()
         {
-            Debug.Log("Stopping world pulling");
-
             animalRuler.gameObject.SetActive(false);
 
             handToHandLine.enabled = false;

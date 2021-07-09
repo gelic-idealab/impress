@@ -289,16 +289,5 @@ namespace Komodo.IMPRESS
                 ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
             });
         }
-
-        // As of Komodo v0.3.2, UIManager does not have a public IsRightHanded function, so we must make do with this workaround. Returns a MenuAnchor.Location value, including UNKNOWN if the parent is not a MenuAnchor.
-        public MenuAnchor.Kind GetMenuLocation ()
-        {
-            if (transform.parent.TryGetComponent(out MenuAnchor anchor))
-            {
-                return anchor.kind;
-            }
-
-            return MenuAnchor.Kind.UNKNOWN;
-        }
     }
 }
