@@ -41,7 +41,7 @@
       "url": "https://package.openupm.com"
     },
     "com.graingeridealab.komodo": {
-      "version": "file:C:/Users/Mobile PC/Documents/GitHub/komodo-unity/Komodo/Assets/Packages/KomodoCore",
+      "version": "file:C:/Users/brandondang/Documents/github_gelic-idealab/komodo-unity/Komodo/Assets/Packages/KomodoCore",
       "depth": 0,
       "source": "local",
       "dependencies": {
