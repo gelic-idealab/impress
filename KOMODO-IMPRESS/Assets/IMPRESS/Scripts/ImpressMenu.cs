@@ -17,25 +17,27 @@ namespace Komodo.IMPRESS
 
         public Toggle brushToggle;
 
-        public Toggle capsuleToggle;
+        // DELAYED FEATURE
 
-        public Toggle cylinderToggle;
+        // public Toggle capsuleToggle;
 
-        public Toggle cubeToggle;
+        // public Toggle cylinderToggle;
 
-        public Toggle planeToggle;
+        // public Toggle cubeToggle;
 
-        public Toggle sphereToggle;
+        // public Toggle planeToggle;
 
-        public TabButton groupTab;
+        // public Toggle sphereToggle;
 
-        public Toggle redToggle;
+        // public TabButton groupTab;
 
-        public Toggle blueToggle;
+        // public Toggle redToggle;
 
-        public Toggle groupToggle;
+        // public Toggle blueToggle;
 
-        public Toggle ungroupToggle;
+        // public Toggle groupToggle;
+
+        // public Toggle ungroupToggle;
 
         void OnValidate ()
         {
@@ -49,10 +51,11 @@ namespace Komodo.IMPRESS
                 throw new UnassignedReferenceException("drawTab");
             }
 
-            if (!groupTab)
-            {
-                throw new UnassignedReferenceException("groupTab");
-            }
+            // DELAYED FEATURE
+            // if (!groupTab)
+            // {
+            //     throw new UnassignedReferenceException("groupTab");
+            // }
 
             if (undoButton == null)
             {
@@ -64,50 +67,51 @@ namespace Komodo.IMPRESS
                 throw new UnassignedReferenceException("brushToggle");
             }
 
-            if (sphereToggle == null)
-            {
-                throw new UnassignedReferenceException("sphereToggle");
-            }
+            // DELAYED FEATURE
+            // if (sphereToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("sphereToggle");
+            // }
 
-            if (capsuleToggle == null)
-            {
-                throw new UnassignedReferenceException("capsuleToggle");
-            }
+            // if (capsuleToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("capsuleToggle");
+            // }
 
-            if (cylinderToggle == null)
-            {
-                throw new UnassignedReferenceException("cylinderToggle");
-            }
+            // if (cylinderToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("cylinderToggle");
+            // }
 
-            if (cubeToggle == null)
-            {
-                throw new UnassignedReferenceException("cubeToggle");
-            }
+            // if (cubeToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("cubeToggle");
+            // }
 
-            if (planeToggle == null)
-            {
-                throw new UnassignedReferenceException("planeToggle");
-            }
+            // if (planeToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("planeToggle");
+            // }
 
-            if (redToggle == null)
-            {
-                throw new UnassignedReferenceException("redToggle");
-            }
+            // if (redToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("redToggle");
+            // }
 
-            if (blueToggle == null)
-            {
-                throw new UnassignedReferenceException("blueToggle");
-            }
+            // if (blueToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("blueToggle");
+            // }
 
-            if (groupToggle == null)
-            {
-                throw new UnassignedReferenceException("groupToggle");
-            }
+            // if (groupToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("groupToggle");
+            // }
 
-            if (ungroupToggle == null)
-            {
-                throw new UnassignedReferenceException("ungroupToggle");
-            }
+            // if (ungroupToggle == null)
+            // {
+            //     throw new UnassignedReferenceException("ungroupToggle");
+            // }
         }
 
         public void Start ()
@@ -155,139 +159,140 @@ namespace Komodo.IMPRESS
                 ImpressEventManager.TriggerEvent("drawTool.disable");
             });
 
-            sphereToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("primitiveTool.selectSphere");
+            // sphereToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("primitiveTool.selectSphere");
 
-                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
+            //         ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("primitiveTool.deselectSphere");
-            });
+            //     ImpressEventManager.TriggerEvent("primitiveTool.deselectSphere");
+            // });
 
-            capsuleToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("primitiveTool.selectCapsule");
+            // capsuleToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("primitiveTool.selectCapsule");
 
-                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
+            //         ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("primitiveTool.deselectCapsule");
-            });
+            //     ImpressEventManager.TriggerEvent("primitiveTool.deselectCapsule");
+            // });
 
-            cylinderToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("primitiveTool.selectCylinder");
+            // cylinderToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("primitiveTool.selectCylinder");
 
-                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
+            //         ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("primitiveTool.deselectCylinder");
-            });
+            //     ImpressEventManager.TriggerEvent("primitiveTool.deselectCylinder");
+            // });
 
-            cubeToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("primitiveTool.selectCube");
+            // cubeToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("primitiveTool.selectCube");
 
-                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
+            //         ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("primitiveTool.deselectCube");
-            });
+            //     ImpressEventManager.TriggerEvent("primitiveTool.deselectCube");
+            // });
 
-            planeToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("primitiveTool.selectPlane");
+            // planeToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("primitiveTool.selectPlane");
 
-                    ImpressEventManager.TriggerEvent("primitiveTool.enable");
+            //         ImpressEventManager.TriggerEvent("primitiveTool.enable");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("primitiveTool.deselectPlane");
-            });
+            //     ImpressEventManager.TriggerEvent("primitiveTool.deselectPlane");
+            // });
 
-            groupTab.onTabSelected.AddListener(() =>
-            {
-                ImpressEventManager.TriggerEvent("groupTool.showGroups");
+            // DELAYED FEATURE
+            // groupTab.onTabSelected.AddListener(() =>
+            // {
+            //     ImpressEventManager.TriggerEvent("groupTool.showGroups");
 
-                // Comment so linter doesn't say to use expression-bodied lambda
-            });
+            //     // Comment so linter doesn't say to use expression-bodied lambda
+            // });
 
-            groupTab.onTabDeselected.AddListener(() =>
-            {
-                ImpressEventManager.TriggerEvent("groupTool.hideGroups");
+            // groupTab.onTabDeselected.AddListener(() =>
+            // {
+            //     ImpressEventManager.TriggerEvent("groupTool.hideGroups");
 
-                ImpressEventManager.TriggerEvent("groupTool.disableGrouping");
+            //     ImpressEventManager.TriggerEvent("groupTool.disableGrouping");
 
-                ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
-            });
+            //     ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
+            // });
 
-            redToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("groupTool.selectRed");
+            // redToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("groupTool.selectRed");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("groupTool.deselectRed");
-            });
+            //     ImpressEventManager.TriggerEvent("groupTool.deselectRed");
+            // });
 
-            blueToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("groupTool.selectBlue");
+            // blueToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("groupTool.selectBlue");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("groupTool.deselectBlue");
-            });
+            //     ImpressEventManager.TriggerEvent("groupTool.deselectBlue");
+            // });
 
-            groupToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("groupTool.enableGrouping");
+            // groupToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("groupTool.enableGrouping");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("groupTool.disableGrouping");
-            });
+            //     ImpressEventManager.TriggerEvent("groupTool.disableGrouping");
+            // });
 
-            ungroupToggle.onValueChanged.AddListener((isOn) =>
-            {
-                if (isOn)
-                {
-                    ImpressEventManager.TriggerEvent("groupTool.enableUngrouping");
+            // ungroupToggle.onValueChanged.AddListener((isOn) =>
+            // {
+            //     if (isOn)
+            //     {
+            //         ImpressEventManager.TriggerEvent("groupTool.enableUngrouping");
 
-                    return;
-                }
+            //         return;
+            //     }
 
-                ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
-            });
+            //     ImpressEventManager.TriggerEvent("groupTool.disableUngrouping");
+            // });
         }
     }
 }

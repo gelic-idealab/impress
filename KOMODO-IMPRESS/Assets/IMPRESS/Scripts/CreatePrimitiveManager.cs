@@ -84,38 +84,39 @@ namespace Komodo.IMPRESS
 
         private PrimitiveType _currentType;
 
-        public void OnValidate ()
-        {
-            if (ghostCapsule == null)
-            {
-                throw new MissingReferenceException("ghostCapsule");
-            }
+        // DELAYED FEATURE
+        // public void OnValidate ()
+        // {
+        //     if (ghostCapsule == null)
+        //     {
+        //         throw new MissingReferenceException("ghostCapsule");
+        //     }
 
-            if (ghostCube == null)
-            {
-                throw new MissingReferenceException("ghostCube");
-            }
+        //     if (ghostCube == null)
+        //     {
+        //         throw new MissingReferenceException("ghostCube");
+        //     }
 
-            if (ghostCylinder == null)
-            {
-                throw new MissingReferenceException("ghostCylinder");
-            }
+        //     if (ghostCylinder == null)
+        //     {
+        //         throw new MissingReferenceException("ghostCylinder");
+        //     }
 
-            if (ghostPlane == null)
-            {
-                throw new MissingReferenceException("ghostPlane");
-            }
+        //     if (ghostPlane == null)
+        //     {
+        //         throw new MissingReferenceException("ghostPlane");
+        //     }
 
-            if (ghostSphere == null)
-            {
-                throw new MissingReferenceException("ghostSphere");
-            }
+        //     if (ghostSphere == null)
+        //     {
+        //         throw new MissingReferenceException("ghostSphere");
+        //     }
 
-            if (toolPlacement == null)
-            {
-                throw new MissingReferenceException("toolPlacement");
-            }
-        }
+        //     if (toolPlacement == null)
+        //     {
+        //         throw new MissingReferenceException("toolPlacement");
+        //     }
+        // }
 
         public void Awake()
         {
