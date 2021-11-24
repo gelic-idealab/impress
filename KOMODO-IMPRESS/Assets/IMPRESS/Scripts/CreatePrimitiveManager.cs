@@ -384,7 +384,7 @@ namespace Komodo.IMPRESS
 
             primitive.AddComponent<BoxCollider>();
 
-            NetworkedGameObject netObject = ClientSpawnManager.Instance.CreateNetworkedGameObject(primitive);
+            var netObject = NetworkedObjectsManager.Instance.CreateNetworkedGameObject(primitive);
 
             //tag it to be used with ECS system
             entityManager.AddComponentData(netObject.Entity, new PrimitiveTag());
@@ -453,18 +453,18 @@ namespace Komodo.IMPRESS
             //detect if we should render or notrender it
             if (newData.primitiveType == 9)
             {
-                if (ClientSpawnManager.Instance.networkedObjectFromEntityId.ContainsKey(newData.primitiveId))
+                if (NetworkedObjectsManager.Instance.networkedObjectFromEntityId.ContainsKey(newData.primitiveId))
                 {
-                    ClientSpawnManager.Instance.networkedObjectFromEntityId[newData.primitiveId].gameObject.SetActive(true);
+                    NetworkedObjectsManager.Instance.networkedObjectFromEntityId[newData.primitiveId].gameObject.SetActive(true);
                 }
 
                 return;
             }
             else if (newData.primitiveType == -9)
             {
-                if (ClientSpawnManager.Instance.networkedObjectFromEntityId.ContainsKey(newData.primitiveId))
+                if (NetworkedObjectsManager.Instance.networkedObjectFromEntityId.ContainsKey(newData.primitiveId))
                 {
-                    ClientSpawnManager.Instance.networkedObjectFromEntityId[newData.primitiveId].gameObject.SetActive(false);
+                    NetworkedObjectsManager.Instance.networkedObjectFromEntityId[newData.primitiveId].gameObject.SetActive(false);
                 }
 
                 return;
@@ -501,7 +501,7 @@ namespace Komodo.IMPRESS
 
             var primitive = GameObject.CreatePrimitive(primitiveToInstantiate);
 
-            NetworkedGameObject nAGO = ClientSpawnManager.Instance.CreateNetworkedGameObject(primitive);
+            NetworkedGameObject nAGO = NetworkedObjectsManager.Instance.CreateNetworkedGameObject(primitive);
 
             entityManager.AddComponentData(nAGO.Entity, new PrimitiveTag { });
 
