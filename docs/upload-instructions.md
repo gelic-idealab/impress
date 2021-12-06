@@ -51,7 +51,8 @@ If for some reason you cannot access this website, download the GLB, or are havi
 Each model is synchronized between everyone, so you may want more than one copy in the lab.
 
 1. Repeat the above steps to upload multiple copies.
-2. You can use the same name for multiple assets.
+2. You can re-upload one GLB multiple times.
+3. You can use the same name for multiple assets.
 
 ## Re-upload any unwanted assets.
 
