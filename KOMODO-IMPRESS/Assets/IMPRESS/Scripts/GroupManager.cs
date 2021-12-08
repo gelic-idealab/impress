@@ -193,7 +193,7 @@ namespace Komodo.IMPRESS
             currentGroup = Instantiate(groupBoundingBox).AddComponent<Group>();
 
             //make net component
-            ClientSpawnManager.Instance.CreateNetworkedGameObject(currentGroup.gameObject);
+            NetworkedObjectsManager.Instance.CreateNetworkedGameObject(currentGroup.gameObject);
 
             //make child of parent to contain our grouped objects
             currentGroup.groupsParent = new GameObject("Linker Parent").transform;
@@ -346,8 +346,10 @@ namespace Komodo.IMPRESS
         // Tells the controller to stop holding the object represented by collider.
         private void _DropGroupedObject(Collider collider)
         {
+            /* TODO FIX THIS TO WORK WITH KOMODOCORE v0.5.4
+
             //only set our grab object to the group object when it is a different object than its own to avoid the object reparenting itself
-            if (leftControllerInteraction.currentTransform != null
+            if (leftControllerInteraction.thisHandTransform != null
                 && leftControllerInteraction.currentTransform.GetInstanceID() == collider.transform.GetInstanceID())
             {
                 leftControllerInteraction.Drop();
@@ -358,6 +360,7 @@ namespace Komodo.IMPRESS
             {
                 rightControllerInteraction.Drop();
             }
+            */
         }
 
         public void SendGroupUpdate(int _entityID, int _groupID, bool isAdding)
@@ -426,6 +429,7 @@ namespace Komodo.IMPRESS
 
                 UpdateGroup(currentGroup);
 
+            /* TODO FIX THIS TO WORK WITH KOMODOCORE v0.5.4
                 if (currentGroup.groups.Count == 0)
                 {
                     ////RE-enable our grabing funcionality by droping destroyed object
@@ -450,6 +454,7 @@ namespace Komodo.IMPRESS
 
                     Destroy(currentGroup.gameObject);
                 }
+            */
             }
 
             //send call if it was a client call
@@ -511,6 +516,7 @@ namespace Komodo.IMPRESS
         {
             GroupProperties data = JsonUtility.FromJson<GroupProperties>(message);
 
+            /* TODO FIX THIS TO WORK WITH KOMODOCORE v0.5.4
             if (data.isAdding)
             {
                 AddToGroup(ClientSpawnManager.Instance.networkedObjectFromEntityId[data.entityID].GetComponent<Collider>(), data.groupID);
@@ -519,6 +525,7 @@ namespace Komodo.IMPRESS
             {
                 RemoveFromGroup(ClientSpawnManager.Instance.networkedObjectFromEntityId[data.entityID].GetComponent<Collider>(), data.groupID);
             }
+            */
         }
 
         public void UpdateGroup(Group linkParent)
