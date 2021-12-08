@@ -1331,6 +1331,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.9333103, y: 2.05, z: 1.84}
   m_Center: {x: 0, y: 0.98, z: 0}
+--- !u!114 &545852486 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5810345376815192295, guid: 1dd47a6054a91504d85b452c20ffb5f9,
+    type: 3}
+  m_PrefabInstance: {fileID: 2620003543351210850}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0cc00765f8f05141b81b30c6b008fe6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &563281558
 GameObject:
   m_ObjectHideFlags: 0
@@ -4100,6 +4112,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5166849370254179863, guid: 1dd47a6054a91504d85b452c20ffb5f9,
+        type: 3}
+      propertyPath: tabManager
+      value: 
+      objectReference: {fileID: 545852486}
     - target: {fileID: 5864094702199614123, guid: 1dd47a6054a91504d85b452c20ffb5f9,
         type: 3}
       propertyPath: heightCalibration
