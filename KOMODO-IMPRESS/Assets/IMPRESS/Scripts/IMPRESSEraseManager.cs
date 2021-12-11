@@ -49,11 +49,11 @@ namespace Komodo.IMPRESS
 
             _enableEraser += ShowEraserDisplays;
 
-            ImpressEventManager.StartListening("eraser.enable", _enableEraser);
+            KomodoEventManager.StartListening("eraseTool.enable", _enableEraser);
 
             _disableEraser += HideEraserDisplays;
 
-            ImpressEventManager.StartListening("eraser.disable", _disableEraser);
+            KomodoEventManager.StartListening("eraseTool.disable", _disableEraser);
         }
 
         public override void TryAndErase(NetworkedGameObject netReg)
