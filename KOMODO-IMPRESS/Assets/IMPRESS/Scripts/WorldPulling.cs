@@ -8,7 +8,7 @@ using System;
 
 namespace Komodo.IMPRESS
 {
-    public class TiltBrushTeleport : MonoBehaviour, IUpdatable
+    public class WorldPulling : MonoBehaviour, IUpdatable
     {
         public float scaleMin = 0.835f;
 
