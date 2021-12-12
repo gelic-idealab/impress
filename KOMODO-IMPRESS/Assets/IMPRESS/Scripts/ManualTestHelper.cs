@@ -61,40 +61,6 @@ public class ManualTestHelper : MonoBehaviour
     [Header("Press T and Y for Left/Right Triggers")]
     public bool hint;
 
-    private void ControllerStateLeftTriggerPressed ()
-    {
-        DoubleTapState.Instance.rightHandTriggerPressed = true;
-
-        if (DoubleTapState.Instance.leftHandTriggerPressed && DoubleTapState.Instance.rightHandTriggerPressed)
-        {
-            DoubleTapState.Instance.OnDoubleTriggerStateOn?.Invoke();
-        }
-    }
-
-    private void ControllerStateLeftTriggerReleased ()
-    {
-        DoubleTapState.Instance.leftHandTriggerPressed = false;
-
-        DoubleTapState.Instance.OnDoubleTriggerStateOff?.Invoke();
-    }
-
-    private void ControllerStateRightTriggerPressed ()
-    {
-        DoubleTapState.Instance.rightHandTriggerPressed = true;
-
-        if (DoubleTapState.Instance.leftHandTriggerPressed && DoubleTapState.Instance.rightHandTriggerPressed)
-        {
-            DoubleTapState.Instance.OnDoubleTriggerStateOn?.Invoke();
-        }
-    }
-
-    private void ControllerStateRightTriggerReleased ()
-    {
-        DoubleTapState.Instance.rightHandTriggerPressed = false;
-
-        DoubleTapState.Instance.OnDoubleTriggerStateOff?.Invoke();
-    }
-
     public void Update ()
     {
         if (keyboard != null)
@@ -102,29 +68,21 @@ public class ManualTestHelper : MonoBehaviour
             if (keyboard.tKey.wasPressedThisFrame)
             {
                 KomodoEventManager.TriggerEvent("controllers.left.triggerDown");
-
-                ControllerStateLeftTriggerPressed();
             }
 
             if (keyboard.tKey.wasReleasedThisFrame)
             {
                 KomodoEventManager.TriggerEvent("controllers.left.triggerUp");
-
-                ControllerStateLeftTriggerReleased();
             }
 
             if (keyboard.yKey.wasPressedThisFrame)
             {
                 KomodoEventManager.TriggerEvent("controllers.right.triggerDown");
-
-                ControllerStateRightTriggerPressed();
             }
 
             if (keyboard.yKey.wasReleasedThisFrame)
             {
                 KomodoEventManager.TriggerEvent("controllers.right.triggerUp");
-
-                ControllerStateRightTriggerReleased();
             }
         }
     }

@@ -3642,7 +3642,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df966710fdf9fd24482419055e44a98f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  thisEntityType: 1
+  thisEntityType: 2
 --- !u!114 &5469253091678711513
 MonoBehaviour:
   m_ObjectHideFlags: 0
