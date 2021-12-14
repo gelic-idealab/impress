@@ -62,21 +62,9 @@ namespace Komodo.IMPRESS
             _isDragging = false;
         }
 
-        public static void AssignComponentReferences (List<LineRenderer> _lineRenderers, List<TriggerDraw> _triggers, Camera _handCamera, GameObject _colorImageObject, GameObject _selectedColorCursor, GameObject _previewColorCursor, Image _selectedColorDisplay, Image _previewColorDisplay, MenuPlacement _menuPlacement)
+        public static void AssignComponentReferences (List<LineRenderer> _lineRenderers, List<TriggerDraw> _triggers, Camera _handCamera, GameObject _colorImageObject, GameObject _selectedColorCursor, GameObject _previewColorCursor, Image _selectedColorDisplay, Image _previewColorDisplay)
         {
-            menuPlacement = _menuPlacement;
-
-            if (!menuPlacement)
-            {
-                throw new UnassignedReferenceException("menuPlacement");
-            }
-
             colorImageObject = _colorImageObject;
-
-            if (!colorImageObject)
-            {
-                throw new UnassignedReferenceException("colorImageObject");
-            }
 
             InitColorComponents();
 
@@ -100,28 +88,32 @@ namespace Komodo.IMPRESS
 
             selectedColorCursor = _selectedColorCursor;
 
-            if (!selectedColorCursor.transform)
-            {
-                throw new MissingFieldException("transform on selectedColorCursor");
-            }
-
             previewColorCursor = _previewColorCursor;
 
+            InitColorCursors();
+
+            previewColorDisplay = _previewColorDisplay;
+
+            selectedColorDisplay = _selectedColorDisplay;
+        }
+
+        private static void InitColorCursors ()
+        {
             if (!previewColorCursor.transform)
             {
                 throw new MissingFieldException("transform on previewColorCursor");
             }
 
-            InitColorCursors();
-        }
-
-        private static void InitColorCursors ()
-        {
             previewColorCursorRectTransform = previewColorCursor.GetComponent<RectTransform>();
 
             if (!previewColorCursorRectTransform)
             {
                 throw new MissingComponentException("RectTransform on previewColorCursor");
+            }
+
+            if (!selectedColorCursor.transform)
+            {
+                throw new MissingFieldException("transform on selectedColorCursor");
             }
 
             selectedColorCursorRectTransform = selectedColorCursor.GetComponent<RectTransform>();
@@ -154,6 +146,11 @@ namespace Komodo.IMPRESS
             {
                 throw new MissingReferenceException("texture in colorImage");
             }
+        }
+
+        public static void AssignMenuPlacement (MenuPlacement placement)
+        {
+            menuPlacement = placement;
         }
 
         public static void InitListeners ()

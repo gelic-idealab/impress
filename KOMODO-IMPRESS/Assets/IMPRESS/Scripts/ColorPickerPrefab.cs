@@ -5,15 +5,19 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System;
 using Komodo.Runtime;
+using Komodo.Utilities;
 
 namespace Komodo.IMPRESS
 {
-    public class ColorPickerReferences : MonoBehaviour
+    public class ColorPickerPrefab : MonoBehaviour
     {
+        [ShowOnly]
         public List<LineRenderer> lineRenderers;
 
+        [ShowOnly]
         public List<TriggerDraw> triggers;
 
+        [ShowOnly]
         public Camera handCamera;
 
         [Tooltip("Requires a RectTransform and a RawImage component with a texture in it. Assumes its image completely fills its RectTransform.")]
@@ -26,26 +30,22 @@ namespace Komodo.IMPRESS
         public Image selectedColorDisplay;
 
         public Image previewColorDisplay;
-
-        public MenuPlacement menuPlacement;
         /*  
 
         /!\ Don't forget to make the texture readable. Select your texture in the Inspector. Choose [Texture Import Setting] > Texture Type > Advanced > Read/Write enabled > True, then Apply.
 
         */
 
-        private void Awake()
-        {
-            ColorPickerManager.Init();
-        }
-
         public void Start()
         {
-            ColorPickerManager.AssignComponentReferences(lineRenderers, triggers, handCamera, colorImageObject, selectedColorCursor, previewColorCursor, selectedColorDisplay, previewColorDisplay, menuPlacement);
+            if (!colorImageObject)
+            {
+                throw new UnassignedReferenceException("colorImageObject");
+            }
+
+            ColorPickerManager.AssignComponentReferences(lineRenderers, triggers, handCamera, colorImageObject, selectedColorCursor, previewColorCursor, selectedColorDisplay, previewColorDisplay);
 
             TryGrabPlayerDrawTargets();
-
-            ColorPickerManager.InitListeners();
         }
 
         public void TryGrabPlayerDrawTargets()
