@@ -3,77 +3,137 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
-using Komodo.Runtime;
 using System;
+using Komodo.Runtime;
 
 namespace Komodo.IMPRESS
 {
-    public class ColorPicker : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+    public static class ColorPickerManager
     {
-        public List<LineRenderer> lineRenderers;
+        public static List<LineRenderer> lineRenderers;
 
-        public List<TriggerDraw> triggers;
+        public static List<TriggerDraw> triggers;
 
-        public Camera handCamera;
+        public static Camera handCamera;
 
         [Tooltip("Requires a RectTransform and a RawImage component with a texture in it. Assumes its image completely fills its RectTransform.")]
-        public GameObject colorImageObject;
+        public static GameObject colorImageObject;
 
-        public GameObject selectedColorCursor;
+        public static GameObject selectedColorCursor;
 
-        public GameObject previewColorCursor;
+        public static GameObject previewColorCursor;
 
-        public Image selectedColorDisplay;
+        public static Image selectedColorDisplay;
 
-        public Image previewColorDisplay;
+        public static Image previewColorDisplay;
 
-        public MenuPlacement menuPlacement;
+        public static MenuPlacement menuPlacement;
         /*  
 
         /!\ Don't forget to make the texture readable. Select your texture in the Inspector. Choose [Texture Import Setting] > Texture Type > Advanced > Read/Write enabled > True, then Apply.
 
         */
-        private Texture2D colorTexture;
+        private static Texture2D colorTexture;
 
-        private RectTransform colorRectTransform;
+        private static RectTransform colorRectTransform;
 
-        private Vector2 selectedColorCursorNormalizedPosition;
+        private static Vector2 selectedColorCursorNormalizedPosition;
 
-        private Vector2 previewColorCursorNormalizedPosition;
+        private static Vector2 previewColorCursorNormalizedPosition;
 
-        private bool _isPreviewing;
+        private static bool _isPreviewing;
 
-        private bool _isDragging;
+        private static bool _isDragging;
 
-        private bool _isInVR;
+        private static bool _isInVR;
 
-        private UnityAction _enable;
+        private static UnityAction _enable;
 
-        private UnityAction _disable;
+        private static UnityAction _disable;
 
-        private RectTransform previewColorCursorRectTransform;
+        private static RectTransform previewColorCursorRectTransform;
 
-        private RectTransform selectedColorCursorRectTransform;
+        private static RectTransform selectedColorCursorRectTransform;
 
-        private void Awake()
+        public static void Init ()
         {
             _isPreviewing = false;
 
             _isDragging = false;
         }
 
-        public void Start()
+        public static void AssignComponentReferences (List<LineRenderer> _lineRenderers, List<TriggerDraw> _triggers, Camera _handCamera, GameObject _colorImageObject, GameObject _selectedColorCursor, GameObject _previewColorCursor, Image _selectedColorDisplay, Image _previewColorDisplay, MenuPlacement _menuPlacement)
         {
+            menuPlacement = _menuPlacement;
+
             if (!menuPlacement)
             {
                 throw new UnassignedReferenceException("menuPlacement");
             }
+
+            colorImageObject = _colorImageObject;
 
             if (!colorImageObject)
             {
                 throw new UnassignedReferenceException("colorImageObject");
             }
 
+            InitColorComponents();
+
+            lineRenderers = _lineRenderers;
+
+            triggers = _triggers;
+
+            foreach (var lineRenderer in lineRenderers)
+            {
+                var triggerDraw = lineRenderer.GetComponent<TriggerDraw>();
+
+                if (triggerDraw == null)
+                {
+                    Debug.LogError("There is no TriggerDraw.cs in Color Tool LineRenderer ");
+
+                    continue;
+                }
+
+                triggers.Add(triggerDraw);
+            }
+
+            selectedColorCursor = _selectedColorCursor;
+
+            if (!selectedColorCursor.transform)
+            {
+                throw new MissingFieldException("transform on selectedColorCursor");
+            }
+
+            previewColorCursor = _previewColorCursor;
+
+            if (!previewColorCursor.transform)
+            {
+                throw new MissingFieldException("transform on previewColorCursor");
+            }
+
+            InitColorCursors();
+        }
+
+        private static void InitColorCursors ()
+        {
+            previewColorCursorRectTransform = previewColorCursor.GetComponent<RectTransform>();
+
+            if (!previewColorCursorRectTransform)
+            {
+                throw new MissingComponentException("RectTransform on previewColorCursor");
+            }
+
+            selectedColorCursorRectTransform = selectedColorCursor.GetComponent<RectTransform>();
+
+            if (!selectedColorCursorRectTransform)
+            {
+                throw new MissingComponentException("RectTransform on selectedColorCursor");
+            }
+        }
+
+        private static void InitColorComponents ()
+        {
             colorRectTransform = colorImageObject.GetComponent<RectTransform>();
 
             if (colorRectTransform == null)
@@ -94,47 +154,10 @@ namespace Komodo.IMPRESS
             {
                 throw new MissingReferenceException("texture in colorImage");
             }
+        }
 
-            foreach (var lineRenderer in lineRenderers)
-            {
-                var triggerDraw = lineRenderer.GetComponent<TriggerDraw>();
-
-                if (triggerDraw == null)
-                {
-                    Debug.LogError("There is no TriggerDraw.cs in Color Tool LineRenderer ", gameObject);
-
-                    continue;
-                }
-
-                triggers.Add(triggerDraw);
-            }
-
-            if (!selectedColorCursor.transform)
-            {
-                throw new MissingFieldException("transform on selectedColorCursor");
-            }
-
-            if (!previewColorCursor.transform)
-            {
-                throw new MissingFieldException("transform on previewColorCursor");
-            }
-
-            previewColorCursorRectTransform = previewColorCursor.GetComponent<RectTransform>();
-
-            if (!previewColorCursorRectTransform)
-            {
-                throw new MissingComponentException("RectTransform on previewColorCursor");
-            }
-
-            selectedColorCursorRectTransform = selectedColorCursor.GetComponent<RectTransform>();
-
-            if (!selectedColorCursorRectTransform)
-            {
-                throw new MissingComponentException("RectTransform on selectedColorCursor");
-            }
-
-            TryGrabPlayerDrawTargets();
-
+        public static void InitListeners ()
+        {
             _enable += Enable;
 
             KomodoEventManager.StartListening("drawTool.enable", _enable);
@@ -144,9 +167,9 @@ namespace Komodo.IMPRESS
             KomodoEventManager.StartListening("drawTool.disable", _disable);
         }
 
-        public void TryGrabPlayerDrawTargets()
+        public static void TryGrabPlayerDrawTargets()
         {
-            var player = GameObject.FindGameObjectWithTag(TagList.player);
+            var player = GameObject.FindWithTag(TagList.player);
 
             if (player && player.TryGetComponent(out PlayerReferences playRef))
             {
@@ -156,7 +179,7 @@ namespace Komodo.IMPRESS
             }
         }
 
-        private Vector2 GetMouseLocalPositionInRectFromPointerEventData(RectTransform rectTransform, PointerEventData data)
+        private static Vector2 GetMouseLocalPositionInRectFromPointerEventData(RectTransform rectTransform, PointerEventData data)
         {
             if (data.pressEventCamera == null)
             {
@@ -171,7 +194,7 @@ namespace Komodo.IMPRESS
         }
 
         // Should return x and y values between 0 and 1, measuring from the upper-left corner of the rect.
-        private Vector2 GetMouseLocalPositionInRect (RectTransform rectTransform, float globalX, float globalY, Camera eventCamera)
+        private static Vector2 GetMouseLocalPositionInRect (RectTransform rectTransform, float globalX, float globalY, Camera eventCamera)
         {
             Vector2 globalPoint = new Vector2(globalX, globalY);
 
@@ -190,9 +213,9 @@ namespace Komodo.IMPRESS
             return new Vector2(-12345f, -12345f);
         }
 
-        private Vector2 g3dcnpir;
+        private static Vector2 g3dcnpir;
 
-        private Vector2 Get3DCursorNormalizedPositionInRect (RectTransform rectTransform, float localX, float localZ)
+        private static Vector2 Get3DCursorNormalizedPositionInRect (RectTransform rectTransform, float localX, float localZ)
         {
             float normX = localX / rectTransform.rect.width;
 
@@ -203,7 +226,7 @@ namespace Komodo.IMPRESS
             return new Vector2(normX, normY);
         }
 
-        private Color GetPixelFromNormalizedPosition (Texture2D texture, Vector2 normalizedPosition)
+        private static Color GetPixelFromNormalizedPosition (Texture2D texture, Vector2 normalizedPosition)
         {
             float normYFromBottom = (normalizedPosition.y * -1f) + 1f;
 
@@ -214,7 +237,7 @@ namespace Komodo.IMPRESS
             return texture.GetPixel(textureX, textureY);
         }
 
-        private void SetLineRenderersColor (List<LineRenderer> _lineRenderers, Color color)
+        private static void SetLineRenderersColor (List<LineRenderer> _lineRenderers, Color color)
         {
             foreach (var lineRenderer in _lineRenderers)
             {
@@ -224,14 +247,20 @@ namespace Komodo.IMPRESS
             }
         }
 
-        private void DisplayColor (Image displayObject, Color color)
+        private static void DisplayColor (Image displayObject, Color color)
         {
             displayObject.color = color;
         }
 
-        private void Enable ()
+        private static void Enable ()
         {
             MenuAnchor anchor = menuPlacement.GetCurrentMenuAnchor();
+
+            if (!anchor) {
+                Debug.LogError("Error: could not enable color picker. Could not find current menu anchor from the MenuPlacement script.");
+
+                return;
+            }
 
             if (anchor.kind == MenuAnchor.Kind.SCREEN)
             {
@@ -243,12 +272,39 @@ namespace Komodo.IMPRESS
             _isInVR = true;
         }
 
-        private void Disable ()
+        private static void Disable ()
         {
             // do nothing.
         }
 
-        public void Update()
+        public static void StartDragging ()
+        {
+            SetIsDragging(true);
+        }
+
+        public static void StopDragging ()
+        {
+            SetIsDragging(false);
+        }
+
+        public static void SetIsDragging (bool value)
+        {
+            _isDragging = value;
+        }
+
+        public static void SetIsPreviewing (bool value)
+        {
+            _isPreviewing = value;
+        }
+
+        public static void SetSelectedColorCursorPosition (PointerEventData eventData)
+        {
+            selectedColorCursor.transform.position = Input.mousePosition;
+
+            selectedColorCursorNormalizedPosition = GetMouseLocalPositionInRectFromPointerEventData(colorRectTransform, eventData);
+        }
+
+        public static void UpdateColors()
         {
             if (_isPreviewing)
             {
@@ -285,65 +341,48 @@ namespace Komodo.IMPRESS
             }
         }
 
-        private void ShowPreviewColor ()
+        public static void ShowPreviewColor ()
         {
             previewColorDisplay.enabled = true;
         }
 
-        private void HidePreviewColor ()
+        public static void HidePreviewColor ()
         {
             previewColorDisplay.enabled = false;
         }
 
-        // Change color marker to match image selection location
-        public void OnPointerClick(PointerEventData eventData)
+        public static void StopSelectingColor ()
         {
-            selectedColorCursor.transform.position = Input.mousePosition;
-
-            selectedColorCursorNormalizedPosition = GetMouseLocalPositionInRectFromPointerEventData(colorRectTransform, eventData);
+            foreach (var item in triggers)
+            {
+                item.isSelectingColorPicker = false;
+            }
         }
 
-        public void OnPointerEnter(PointerEventData eventData)
+        public static void SetIsSelectingColor (bool value)
         {
-            _isPreviewing = true;
+            foreach (var item in triggers)
+            {
+                item.isSelectingColorPicker = value;
+            }
+        }
+
+        public static void StartPreviewing ()
+        {
+            SetIsPreviewing(true);
 
             ShowPreviewColor();
 
-            foreach (var item in triggers)
-            {
-                item.isSelectingColorPicker = true;
-            }
+            SetIsSelectingColor(true);
         }
 
-        public void OnPointerExit(PointerEventData eventData)
+        public static void StopPreviewing ()
         {
-            _isPreviewing = false;
+            SetIsPreviewing(false);
 
             HidePreviewColor();
 
-            foreach (var item in triggers)
-            {
-                item.isSelectingColorPicker = false;
-            }
-        }
-
-        public void OnPointerDown (PointerEventData eventData)
-        {
-            _isDragging = true;
-        }
-
-        public void OnPointerUp (PointerEventData eventData)
-        {
-            _isDragging = false;
-        }
-
-        // Stop selecting color, because OnPointerExit will not fire if the GameObject is disabled.
-        public void OnDisable()
-        {
-            foreach (var item in triggers)
-            {
-                item.isSelectingColorPicker = false;
-            }
+            SetIsSelectingColor(false);
         }
     }
 }
