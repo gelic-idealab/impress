@@ -7,7 +7,7 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/IMPRESS/Scene/Main.unity
-    guid: 3f83561dfa14d984f92589b4a350a47f
+    guid: dba90801ac9e9374f9139c616e5f8862
   - enabled: 1
     path: Assets/IMPRESS/Scene/OutsideTheMilkyWay.unity
     guid: 744ae30ef72e3034e8e024654ab7e964

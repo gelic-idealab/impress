@@ -1,0 +1,11 @@
+Builder		_PERSON_
+
+Repo		impress
+Branch		_BRANCH_
+Commit		_SEVEN_CHAR_HASH_
+
+Started		YYYY-MM-DD-HHMM
+Finished	YYYY-MM-DD-HHMM
+
+App		    Impress
+Build		_VERSION_NUMBER_

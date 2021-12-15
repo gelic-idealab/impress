@@ -27,11 +27,11 @@ namespace Komodo.IMPRESS
         {
             _enable += Enable;
 
-            ImpressEventManager.StartListening("drawTool.enable", _enable);
+            KomodoEventManager.StartListening("drawTool.enable", _enable);
 
             _disable += Disable;
 
-            ImpressEventManager.StartListening("drawTool.disable", _disable);
+            KomodoEventManager.StartListening("drawTool.disable", _disable);
         }
 
         // Our own function. Not to be confused with Unity's OnEnable.
