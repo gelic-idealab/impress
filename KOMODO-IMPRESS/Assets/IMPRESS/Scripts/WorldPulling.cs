@@ -108,6 +108,8 @@ namespace Komodo.IMPRESS
 
         private GameObject currentPlayspaceAxes;
 
+        private Vector3 copyOfInitialPivotPointPosition;
+
         public void Awake()
         {
             initialPivotPointInPlayspace = new GameObject("InitialPivotPoint").transform;
@@ -366,16 +368,11 @@ namespace Komodo.IMPRESS
 
         public float ComputeDiffRotationY (Quaternion initial, Quaternion current)
         {
-            float result = (Quaternion.Inverse(initial) * current).eulerAngles.y;
+            float result = (current.eulerAngles - initial.eulerAngles).y;
 
-            if (result > 360)
+            if (result > -0.001f && result < 0.001f)
             {
-                Debug.Log($"WOrld pulling diffroty was greater than 360 {result}");
-            }
-
-            if (result < -360)
-            {
-                Debug.Log($"WOrld pulling diffroty was less than -360 {result}");
+                result = 0.0f;
             }
 
             return result;
@@ -417,7 +414,8 @@ namespace Komodo.IMPRESS
 
             amount *= -1.0f; // Make our own client rotate in the opposite direction that our hands did
 
-            currentPlayspace.RotateAround(initialPivotPointInPlayspace.position, Vector3.up, amount);
+            currentPlayspace.RotateAround(
+            copyOfInitialPivotPointPosition, Vector3.up, amount);
 
             playspace.position = currentPlayspace.position;
 
@@ -458,6 +456,8 @@ namespace Komodo.IMPRESS
         {
             UpdateLocalPivotPoint(initialPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
 
+            copyOfInitialPivotPointPosition = initialPivotPointInPlayspace.position;
+
             UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
 
             // Scale
@@ -491,7 +491,7 @@ namespace Komodo.IMPRESS
             // TODO: update size of drawing strokes here 
         }
 
-        public void OnUpdate(float realltime)
+        public void OnUpdate (float realltime)
         {
             // Rotation
 
