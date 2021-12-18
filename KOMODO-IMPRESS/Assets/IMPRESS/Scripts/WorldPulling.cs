@@ -271,11 +271,11 @@ namespace Komodo.IMPRESS
             return handDistance.Initial / handDistance.Current * (playerLocalScaleX.Initial * playerLocalScaleX.Current);
         }
 
-        public float ComputeRotationDifferenceY (UpdatingValue<Quaternion> rotation)
+        public float ComputeDiffYRotationInInitialPlayspace (UpdatingValue<Quaternion> rotation)
         {
-            Quaternion diffRotation = Quaternion.Inverse(rotation.Initial) * rotation.Current;
+            Vector3 diffRotation = rotation.Current.eulerAngles - rotation.Initial.eulerAngles;
 
-            return diffRotation.eulerAngles.y;
+            return diffRotation.y;
         }
 
         public void UpdatePivotPoint (Transform pivotPoint, Vector3 hand0Position, Vector3 hand1Position)
@@ -394,7 +394,7 @@ namespace Komodo.IMPRESS
 
             rotationInInitialPlayspace.Current = Quaternion.Inverse(initialPlayspaceRotation) * pivotPoint.rotation;
 
-            float rotateAmount = ComputeRotationDifferenceY(rotationInInitialPlayspace);
+            float rotateAmount = ComputeDiffYRotationInInitialPlayspace(rotationInInitialPlayspace);
 
             UpdatePlayspaceRotation(rotateAmount);
 
