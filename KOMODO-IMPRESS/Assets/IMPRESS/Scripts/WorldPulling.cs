@@ -76,9 +76,9 @@ namespace Komodo.IMPRESS
 
         public Transform[] hands = new Transform[2];
 
-        public Transform pivotPointsParent;
+        private Transform initialPivotPointInPlayspace;
 
-        public Transform pivotPoint;
+        public Transform currentPivotPointInPlayspace;
 
         // Connect this action as a callback in Unity.
         public Action onDoubleTriggerPress;
@@ -102,14 +102,21 @@ namespace Komodo.IMPRESS
 
         private GameObject currentPlayspaceObject;
 
+        public Material[] materials;
+
+        private GameObject initialPlayspaceAxes;
+
+        private GameObject currentPlayspaceAxes;
+
         public void Awake()
         {
-            //create hierarchy to rotate double grab objects appropriately
-            //create root parent and share it through scripts by setting it to a static field
-            pivotPointsParent = new GameObject("PivotPoints").transform;
+            initialPivotPointInPlayspace = new GameObject("InitialPivotPoint").transform;
 
-            //construct coordinate system to reference for tilting double grab object 
-            pivotPoint = new GameObject("PivotPoint1").transform;
+            initialPivotPointInPlayspace.parent = playspace;
+
+            currentPivotPointInPlayspace = new GameObject("CurrentPivotPoint").transform;
+
+            currentPivotPointInPlayspace.parent = playspace;
 
             if (!physicalFloor)
             {
@@ -204,19 +211,103 @@ namespace Komodo.IMPRESS
                 return;
             }
 
-            var _debugAxes = Instantiate(debugAxes);
+            var initialPivotPointAxes = Instantiate(debugAxes);
 
-            _debugAxes.transform.parent = pivotPoint;
+            initialPivotPointAxes.transform.parent = initialPivotPointInPlayspace;
 
-            _debugAxes.transform.localPosition = Vector3.zero;
+            initialPivotPointAxes.transform.localPosition = Vector3.zero;
 
-            _debugAxes.transform.localRotation = Quaternion.identity;
+            initialPivotPointAxes.transform.localRotation = Quaternion.identity;
+
+            initialPivotPointAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[0];
+
+            initialPivotPointAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[0];
+
+            initialPivotPointAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[0];
+
+            var currentPivotPointAxes = Instantiate(debugAxes);
+
+            currentPivotPointAxes.transform.parent = currentPivotPointInPlayspace;
+
+            currentPivotPointAxes.transform.localPosition = Vector3.zero;
+
+            currentPivotPointAxes.transform.localRotation = Quaternion.identity;
+
+            currentPivotPointAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[1];
+
+            currentPivotPointAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[1];
+
+            currentPivotPointAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[1];
+
+            initialPlayspaceAxes = Instantiate(debugAxes);
+
+            initialPlayspaceAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[2];
+
+            initialPlayspaceAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[2];
+
+            initialPlayspaceAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[2];
+
+            currentPlayspaceAxes = Instantiate(debugAxes);
+
+            currentPlayspaceAxes.transform.parent = playspace;
+
+            currentPlayspaceAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[3];
+
+            currentPlayspaceAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[3];
+
+            currentPlayspaceAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[3];
+
+            var hand0Axes = Instantiate(debugAxes);
+
+            hand0Axes.transform.parent = hands[0];
+
+            hand0Axes.transform.localPosition = Vector3.zero;
+
+            hand0Axes.transform.localRotation = Quaternion.identity;
+
+            hand0Axes.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+
+            hand0Axes.transform.GetChild(0).GetComponent<Renderer>().material = materials[4];
+
+            hand0Axes.transform.GetChild(1).GetComponent<Renderer>().material = materials[4];
+
+            hand0Axes.transform.GetChild(2).GetComponent<Renderer>().material = materials[4];
+
+            var hand1Axes = Instantiate(debugAxes);
+
+            hand1Axes.transform.parent = hands[1];
+
+            hand1Axes.transform.localPosition = Vector3.zero;
+
+            hand1Axes.transform.localRotation = Quaternion.identity;
+
+            hand1Axes.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+
+            hand1Axes.transform.GetChild(0).GetComponent<Renderer>().material = materials[5];
+
+            hand1Axes.transform.GetChild(1).GetComponent<Renderer>().material = materials[5];
+
+            hand1Axes.transform.GetChild(2).GetComponent<Renderer>().material = materials[5];
+        }
+
+        private void UpdateDebugAxes ()
+        {
+            if (!showDebugAxes)
+            {
+                return;
+            }
+
+            initialPlayspaceAxes.transform.position = initialPlayspacePosition;
+
+            initialPlayspaceAxes.transform.rotation = initialPlayspaceRotation;
         }
 
         [ContextMenu("Start World Pulling")]
         public void StartWorldPulling()
         {
-            UpdateInitialValues();
+            Debug.Log("started world pulling"); //TODO Remove
+
+            SetInitialValues();
 
             animalRuler.gameObject.SetActive(true);
 
@@ -249,6 +340,8 @@ namespace Komodo.IMPRESS
             {
                 GameStateManager.Instance.DeRegisterUpdatableObject(this);
             }
+
+            Debug.Log("stopped world pulling"); //TODO Remove
         }
 
         private void ShowPhysicalFloor ()
@@ -271,16 +364,26 @@ namespace Komodo.IMPRESS
             return handDistance.Initial / handDistance.Current * (playerLocalScaleX.Initial * playerLocalScaleX.Current);
         }
 
-        public float ComputeDiffYRotationInInitialPlayspace (UpdatingValue<Quaternion> rotation)
+        public float ComputeDiffRotationY (Quaternion initial, Quaternion current)
         {
-            Vector3 diffRotation = rotation.Current.eulerAngles - rotation.Initial.eulerAngles;
+            float result = (Quaternion.Inverse(initial) * current).eulerAngles.y;
 
-            return diffRotation.y;
+            if (result > 360)
+            {
+                Debug.Log($"WOrld pulling diffroty was greater than 360 {result}");
+            }
+
+            if (result < -360)
+            {
+                Debug.Log($"WOrld pulling diffroty was less than -360 {result}");
+            }
+
+            return result;
         }
 
-        public void UpdatePivotPoint (Transform pivotPoint, Vector3 hand0Position, Vector3 hand1Position)
+        public void UpdateLocalPivotPoint (Transform pivotPointInPlayspace, Vector3 hand0Position, Vector3 hand1Position)
         {
-            pivotPoint.position = (hand0Position + hand1Position) / 2;
+            pivotPointInPlayspace.localPosition = playspace.InverseTransformPoint((hand0Position + hand1Position) / 2);
 
             Vector3 deltaHandPositionsXZ = new Vector3(
                 (hand1Position - hand0Position).x,
@@ -288,7 +391,7 @@ namespace Komodo.IMPRESS
                 (hand1Position - hand0Position).z
             );
 
-            pivotPoint.rotation = Quaternion.LookRotation(deltaHandPositionsXZ, Vector3.up);
+            pivotPointInPlayspace.localRotation = Quaternion.Inverse(playspace.rotation) * Quaternion.LookRotation(deltaHandPositionsXZ, Vector3.up);
         }
 
         public void UpdatePlayerPosition (Vector3 teleportLocation)
@@ -312,9 +415,9 @@ namespace Komodo.IMPRESS
 
             currentPlayspace.rotation = initialPlayspaceRotation;
 
-            amount *= -1; // Make our own client rotate in the opposite direction that our hands did
+            amount *= -1.0f; // Make our own client rotate in the opposite direction that our hands did
 
-            currentPlayspace.RotateAround(pivotPoint.position, Vector3.up, amount);
+            currentPlayspace.RotateAround(initialPivotPointInPlayspace.position, Vector3.up, amount);
 
             playspace.position = currentPlayspace.position;
 
@@ -351,9 +454,11 @@ namespace Komodo.IMPRESS
             animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, min, max), 0));
         }
 
-        protected void UpdateInitialValues ()
+        protected void SetInitialValues ()
         {
-            UpdatePivotPoint(pivotPoint, hands[0].transform.position, hands[1].transform.position);
+            UpdateLocalPivotPoint(initialPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
+
+            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
 
             // Scale
 
@@ -367,13 +472,13 @@ namespace Komodo.IMPRESS
 
             initialPlayspaceRotation = playspace.rotation;
 
-            rotationInInitialPlayspace = new UpdatingValue<Quaternion>(Quaternion.Inverse(initialPlayspaceRotation) * pivotPoint.rotation);
+            UpdateDebugAxes();
 
             // Position
 
             initialLeftEyePosition = leftEye.position;
 
-            handsAverageLocalPosition = new UpdatingValue<Vector3>(pivotPoint.position - playspace.position);
+            handsAverageLocalPosition = new UpdatingValue<Vector3>(currentPivotPointInPlayspace.position - playspace.position);
         }
 
         public void UpdatePlayspaceScale (float scale)
@@ -390,11 +495,11 @@ namespace Komodo.IMPRESS
         {
             // Rotation
 
-            UpdatePivotPoint(pivotPoint, hands[0].transform.position, hands[1].transform.position);
+            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
 
-            rotationInInitialPlayspace.Current = Quaternion.Inverse(initialPlayspaceRotation) * pivotPoint.rotation;
+            float rotateAmount = ComputeDiffRotationY(initialPivotPointInPlayspace.rotation, currentPivotPointInPlayspace.rotation);
 
-            float rotateAmount = ComputeDiffYRotationInInitialPlayspace(rotationInInitialPlayspace);
+            UpdateDebugAxes();
 
             UpdatePlayspaceRotation(rotateAmount);
 
@@ -422,7 +527,7 @@ namespace Komodo.IMPRESS
 
             // Position
 
-            handsAverageLocalPosition.Current = pivotPoint.position - playspace.position;
+            handsAverageLocalPosition.Current = currentPivotPointInPlayspace.position - playspace.position;
 
             Vector3 newPosition = ComputePositionDifference(handsAverageLocalPosition) + initialLeftEyePosition;
 
