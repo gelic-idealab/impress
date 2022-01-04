@@ -48,8 +48,10 @@ namespace Komodo.IMPRESS
         [SerializeField]
         private UpdatingValue<float> playerLocalScaleX;
 
+        private float initialPlayspaceScale;
+
         [SerializeField]
-        private UpdatingValue<float> handDistance;
+        private UpdatingValue<float> handDistanceInPlayspace;
 
         [SerializeField]
         private Vector3 initialLeftEyePosition;
@@ -358,7 +360,9 @@ namespace Komodo.IMPRESS
             return handsAveragePosition.Initial - handsAveragePosition.Current;
         }
 
-        public float ComputeScale (UpdatingValue<float> handDistance, UpdatingValue<float> playerLocalScaleX)
+        // Computes the dif
+
+        public float ComputeScaleRatio (UpdatingValue<float> handDistance, UpdatingValue<float> playerLocalScaleX)
         {
             return handDistance.Initial / handDistance.Current * (playerLocalScaleX.Initial * playerLocalScaleX.Current);
         }
@@ -399,7 +403,7 @@ namespace Komodo.IMPRESS
             playspace.position = finalPlayspacePosition;
         }
 
-        public void UpdatePlayspaceRotation (float amount)
+        public void RotatePlayspaceAroundPoint (float amount)
         {
             // Copy the transform to a new gameObject.
 
@@ -438,9 +442,9 @@ namespace Komodo.IMPRESS
             return (playerScale - 0.9f) / 1.3f;
         }
 
-        public void UpdateRulerValue (float newScaleRatio)
+        public void UpdateRulerValue (float newScale)
         {
-            var rulerValue = ComputeRulerValue(newScaleRatio);
+            var rulerValue = ComputeRulerValue(newScale);
 
             float min = ComputeRulerValue(scaleMin);
 
@@ -459,9 +463,9 @@ namespace Komodo.IMPRESS
 
             // Scale
 
-            playerLocalScaleX = new UpdatingValue<float>(playspace.localScale.x * initialScale);
+            handDistanceInPlayspace = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position) / playspace.localScale.x);
 
-            handDistance = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position));
+            initialPlayspaceScale = playspace.localScale.x;
 
             // Rotation
 
@@ -478,14 +482,21 @@ namespace Komodo.IMPRESS
             handsAverageLocalPosition = new UpdatingValue<Vector3>(currentPivotPointInPlayspace.position - playspace.position);
         }
 
-        public void UpdatePlayspaceScale (float scale)
+        public void ScalePlayspaceAroundPoint (float scaleRatio, float newScale)
         {
-            // TODO: scale around a point here
+            playspace.localScale = new Vector3(newScale, newScale, newScale);
+
+            playspace.position = ((initialPlayspacePosition - initialPivotPointInPlayspace.position) * scaleRatio) + initialPivotPointInPlayspace.position;
         }
 
-        public void UpdateLineRenderersScale (float scale)
+        public void UpdateLineRenderersScale (float newScale)
         {
             // TODO: update size of drawing strokes here 
+        }
+
+        public void SendAvatarScaleUpdate (float newScale)
+        {
+            //TODO: send message that avatar scale changed to other clients
         }
 
         public void OnUpdate (float realltime)
@@ -498,27 +509,29 @@ namespace Komodo.IMPRESS
 
             UpdateDebugAxes();
 
-            UpdatePlayspaceRotation(rotateAmount);
+            RotatePlayspaceAroundPoint(rotateAmount);
 
             // Scale
 
-            handDistance.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
+            handDistanceInPlayspace.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position) / playspace.localScale.x;
 
-            playerLocalScaleX.Current = playspace.localScale.x;
+            float unclampedScaleRatio = 1.0f / (handDistanceInPlayspace.Current / handDistanceInPlayspace.Initial);
 
-            float newScale = ComputeScale(handDistance, playerLocalScaleX);
+            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspaceScale, scaleMin, scaleMax);
 
-            newScale = Mathf.Clamp(newScale, scaleMin, scaleMax);
+            float clampedScaleRatio = clampedNewScale / initialPlayspaceScale;
 
-            //TODO put back UpdatePlayspaceScale(newScale);
+            ScalePlayspaceAroundPoint(clampedScaleRatio, clampedNewScale);
 
-            //TODO put back UpdateLineRenderersScale(newScale);
+            UpdateLineRenderersScale(clampedNewScale);
+
+            SendAvatarScaleUpdate(clampedNewScale);
 
             // Ruler
 
-            UpdateRulerValue(newScale);
+            UpdateRulerValue(clampedNewScale);
 
-            UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, newScale);
+            UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, clampedNewScale);
 
             UpdateHandToHandLineEndpoints(hands[0].transform.position, hands[1].transform.position);
 

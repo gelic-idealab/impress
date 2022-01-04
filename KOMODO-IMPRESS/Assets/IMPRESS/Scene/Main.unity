@@ -3435,6 +3435,11 @@ PrefabInstance:
       objectReference: {fileID: 6308719959967395149}
     - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
         type: 3}
+      propertyPath: showDebugAxes
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
+        type: 3}
       propertyPath: teleportPlayer
       value: 
       objectReference: {fileID: 8474295771467764973}
