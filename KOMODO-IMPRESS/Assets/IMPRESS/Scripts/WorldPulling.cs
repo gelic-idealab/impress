@@ -415,8 +415,7 @@ namespace Komodo.IMPRESS
 
             amount *= -1.0f; // Make our own client rotate in the opposite direction that our hands did
 
-            currentPlayspace.RotateAround(
-            copyOfInitialPivotPointPosition, Vector3.up, amount);
+            currentPlayspace.RotateAround(copyOfInitialPivotPointPosition, Vector3.up, amount);
 
             playspace.position = currentPlayspace.position;
 
@@ -486,7 +485,7 @@ namespace Komodo.IMPRESS
         {
             playspace.localScale = new Vector3(newScale, newScale, newScale);
 
-            playspace.position = ((initialPlayspacePosition - initialPivotPointInPlayspace.position) * scaleRatio) + initialPivotPointInPlayspace.position;
+            playspace.position = ((playspace.position - initialPivotPointInPlayspace.position) * scaleRatio) + initialPivotPointInPlayspace.position;
         }
 
         public void UpdateLineRenderersScale (float newScale)
@@ -501,6 +500,27 @@ namespace Komodo.IMPRESS
 
         public void OnUpdate (float realltime)
         {
+            // Scale
+
+            handDistanceInPlayspace.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position) / playspace.localScale.x;
+
+            float unclampedScaleRatio = 1.0f / (handDistanceInPlayspace.Current / handDistanceInPlayspace.Initial);
+
+            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspaceScale, scaleMin, scaleMax);
+
+            if (clampedNewScale > -0.001f && clampedNewScale < 0.001f)
+            {
+                clampedNewScale = 0.0f;
+            }
+
+            float clampedScaleRatio = clampedNewScale / initialPlayspaceScale;
+
+            ScalePlayspaceAroundPoint(clampedScaleRatio, clampedNewScale);
+
+            UpdateLineRenderersScale(clampedNewScale);
+
+            SendAvatarScaleUpdate(clampedNewScale);
+
             // Rotation
 
             UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
@@ -510,22 +530,6 @@ namespace Komodo.IMPRESS
             UpdateDebugAxes();
 
             RotatePlayspaceAroundPoint(rotateAmount);
-
-            // Scale
-
-            handDistanceInPlayspace.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position) / playspace.localScale.x;
-
-            float unclampedScaleRatio = 1.0f / (handDistanceInPlayspace.Current / handDistanceInPlayspace.Initial);
-
-            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspaceScale, scaleMin, scaleMax);
-
-            float clampedScaleRatio = clampedNewScale / initialPlayspaceScale;
-
-            ScalePlayspaceAroundPoint(clampedScaleRatio, clampedNewScale);
-
-            UpdateLineRenderersScale(clampedNewScale);
-
-            SendAvatarScaleUpdate(clampedNewScale);
 
             // Ruler
 
