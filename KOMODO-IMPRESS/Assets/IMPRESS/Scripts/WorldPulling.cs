@@ -99,7 +99,7 @@ namespace Komodo.IMPRESS
 
         public float initialScale = 1;
 
-        private GameObject currentPlayspaceObject;
+        private GameObject initialPlayspace;
 
         public Material[] materials;
 
@@ -108,6 +108,8 @@ namespace Komodo.IMPRESS
         private GameObject currentPlayspaceAxes;
 
         private Vector3 copyOfInitialPivotPointPosition;
+
+        private GameObject copyOfInitialPivotPointPositionAxes;
 
         public void Awake()
         {
@@ -124,7 +126,7 @@ namespace Komodo.IMPRESS
                 throw new UnassignedReferenceException("physicalFloorReference");
             }
 
-            currentPlayspaceObject = new GameObject();
+            initialPlayspace = new GameObject();
 
             initialPlayspacePosition = new Vector3();
 
@@ -289,6 +291,18 @@ namespace Komodo.IMPRESS
             hand1Axes.transform.GetChild(1).GetComponent<Renderer>().material = materials[5];
 
             hand1Axes.transform.GetChild(2).GetComponent<Renderer>().material = materials[5];
+
+            copyOfInitialPivotPointPositionAxes = Instantiate(debugAxes);
+
+            copyOfInitialPivotPointPositionAxes.transform.localPosition = Vector3.zero;
+
+            copyOfInitialPivotPointPositionAxes.transform.localRotation = Quaternion.identity;
+
+            copyOfInitialPivotPointPositionAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[6];
+
+            copyOfInitialPivotPointPositionAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[6];
+
+            copyOfInitialPivotPointPositionAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[6];
         }
 
         private void UpdateDebugAxes ()
@@ -301,6 +315,8 @@ namespace Komodo.IMPRESS
             initialPlayspaceAxes.transform.position = initialPlayspacePosition;
 
             initialPlayspaceAxes.transform.rotation = initialPlayspaceRotation;
+
+            copyOfInitialPivotPointPositionAxes.transform.position = copyOfInitialPivotPointPosition;
         }
 
         [ContextMenu("Start World Pulling")]
@@ -403,23 +419,20 @@ namespace Komodo.IMPRESS
             playspace.position = finalPlayspacePosition;
         }
 
-        public void RotatePlayspaceAroundPoint (float amount)
+        public void RotateAndScalePlayspaceAroundPoint (float amount, float scaleRatio, float newScale)
         {
-            // Copy the transform to a new gameObject.
+            // Make our own client rotate in the opposite direction that our hands did
+            amount *= -1.0f;
 
-            Transform currentPlayspace = currentPlayspaceObject.transform;
+            // Compute position and rotation as if not scaling
+            initialPlayspace.transform.RotateAround(copyOfInitialPivotPointPosition, Vector3.up, amount);
 
-            currentPlayspace.position = initialPlayspacePosition;
+            // Find position after scaling and rotation and apply it
+            playspace.position = ((initialPlayspace.transform.position - copyOfInitialPivotPointPosition) * scaleRatio) + copyOfInitialPivotPointPosition;
 
-            currentPlayspace.rotation = initialPlayspaceRotation;
+            playspace.rotation = initialPlayspace.transform.rotation;
 
-            amount *= -1.0f; // Make our own client rotate in the opposite direction that our hands did
-
-            currentPlayspace.RotateAround(copyOfInitialPivotPointPosition, Vector3.up, amount);
-
-            playspace.position = currentPlayspace.position;
-
-            playspace.rotation = currentPlayspace.rotation;
+            playspace.localScale = new Vector3(newScale, newScale, newScale);
         }
 
         public void UpdateRulerPose (Vector3 hand0Position, Vector3 hand1Position, float scale)
@@ -466,6 +479,14 @@ namespace Komodo.IMPRESS
 
             initialPlayspaceScale = playspace.localScale.x;
 
+            // Copy the transform to a new gameObject.
+
+            initialPlayspace.transform.position = playspace.position;
+
+            initialPlayspace.transform.rotation = playspace.rotation;
+
+            initialPlayspace.transform.localScale = playspace.localScale;
+
             // Rotation
 
             initialPlayspacePosition = playspace.position;
@@ -483,9 +504,7 @@ namespace Komodo.IMPRESS
 
         public void ScalePlayspaceAroundPoint (float scaleRatio, float newScale)
         {
-            playspace.localScale = new Vector3(newScale, newScale, newScale);
-
-            playspace.position = ((playspace.position - initialPivotPointInPlayspace.position) * scaleRatio) + initialPivotPointInPlayspace.position;
+           
         }
 
         public void UpdateLineRenderersScale (float newScale)
@@ -500,7 +519,7 @@ namespace Komodo.IMPRESS
 
         public void OnUpdate (float realltime)
         {
-            // Scale
+            // Compute Scale
 
             handDistanceInPlayspace.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position) / playspace.localScale.x;
 
@@ -515,13 +534,7 @@ namespace Komodo.IMPRESS
 
             float clampedScaleRatio = clampedNewScale / initialPlayspaceScale;
 
-            ScalePlayspaceAroundPoint(clampedScaleRatio, clampedNewScale);
-
-            UpdateLineRenderersScale(clampedNewScale);
-
-            SendAvatarScaleUpdate(clampedNewScale);
-
-            // Rotation
+            // Compute Rotation
 
             UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
 
@@ -529,7 +542,13 @@ namespace Komodo.IMPRESS
 
             UpdateDebugAxes();
 
-            RotatePlayspaceAroundPoint(rotateAmount);
+            // Apply Scale and Rotation
+
+            RotateAndScalePlayspaceAroundPoint(rotateAmount, clampedScaleRatio, clampedNewScale);
+
+            UpdateLineRenderersScale(clampedNewScale);
+
+            SendAvatarScaleUpdate(clampedNewScale);
 
             // Ruler
 
@@ -550,7 +569,7 @@ namespace Komodo.IMPRESS
 
         public void OnDestroy ()
         {
-            Destroy(currentPlayspaceObject);
+            Destroy(initialPlayspace);
         }
     }
 }
