@@ -424,25 +424,37 @@ namespace Komodo.IMPRESS
             // Make our own client rotate in the opposite direction that our hands did
             amount *= -1.0f;
 
-            // Update rotation and position -- temporarily store new transform values inside of initialPlayspace itself
+            // Temporarily store initialPlayspace's values
             Vector3 actualInitialPlayspacePosition = initialPlayspace.transform.position;
 
             Quaternion actualInitialPlayspaceRotation = initialPlayspace.transform.rotation;
 
-            // This is because RotateAround does not return a new transform, so we must operate on an existing object
-            // We don't want to rotate the playspace itself because we want to rotate from some constant initial direction
-            // Rather than rotating from the last frame's playspace's orientation
+            // Update rotation and position
+
+            // We must perform this on initialPlayspace
+            // because RotateAround does not return a new 
+            // transform.
+
+            // We don't want to rotate the playspace itself, because
+            // we want to rotate from some constant initial direction.
+            // Rather than rotating from the last frame's playspace's 
+            // orientation.
             initialPlayspace.transform.RotateAround(copyOfInitialPivotPointPosition, Vector3.up, amount);
 
             playspace.rotation = initialPlayspace.transform.rotation;
 
             // Scale around a point: move to new position
-            playspace.position = ((initialPlayspace.transform.position - copyOfInitialPivotPointPosition) * scaleRatio) + copyOfInitialPivotPointPosition;
+            Vector3 scaledAroundPosition = ((initialPlayspace.transform.position - copyOfInitialPivotPointPosition) * scaleRatio) + copyOfInitialPivotPointPosition;
 
             // Scale around a point: update scale
             playspace.localScale = new Vector3(newScale, newScale, newScale);
 
-            // Reset initialPlayspace
+            // Translate
+            Vector3 deltaPosition = Vector3.zero - (currentPivotPointInPlayspace.position - initialPivotPointInPlayspace.position);
+
+            playspace.position = scaledAroundPosition + deltaPosition;
+
+            // Restore initialPlayspace from stored values
             initialPlayspace.transform.position = actualInitialPlayspacePosition;
 
             initialPlayspace.transform.rotation = actualInitialPlayspaceRotation;

@@ -3435,11 +3435,6 @@ PrefabInstance:
       objectReference: {fileID: 6308719959967395149}
     - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
         type: 3}
-      propertyPath: showDebugAxes
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
-        type: 3}
       propertyPath: teleportPlayer
       value: 
       objectReference: {fileID: 8474295771467764973}
@@ -3453,21 +3448,6 @@ PrefabInstance:
       propertyPath: hands.Array.data[1]
       value: 
       objectReference: {fileID: 8472804883547595920}
-    - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
-        type: 3}
-      propertyPath: materials.Array.size
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
-        type: 3}
-      propertyPath: materials.Array.data[5]
-      value: 
-      objectReference: {fileID: 2100000, guid: 1bf2a636382de314d883fcb85d081587, type: 2}
-    - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
-        type: 3}
-      propertyPath: materials.Array.data[6]
-      value: 
-      objectReference: {fileID: 2100000, guid: 381fb7f0084fa1d4982d467aa0d80e0a, type: 2}
     - target: {fileID: 4935357643860465840, guid: 85334d0d9069bb546bb3379686af011c,
         type: 3}
       propertyPath: debugAxesMaterials.Array.size

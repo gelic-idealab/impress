@@ -127,7 +127,8 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 02fef1dbd624dcc4d9c9ab88a7e922d4, type: 2}
   - {fileID: 2100000, guid: d7589b41c4f527c44af461d54cf01d52, type: 2}
   - {fileID: 2100000, guid: 093e7be84ebdb7940ba941aee252cbf9, type: 2}
-  - {fileID: 2100000, guid: 093e7be84ebdb7940ba941aee252cbf9, type: 2}
+  - {fileID: 2100000, guid: 1bf2a636382de314d883fcb85d081587, type: 2}
+  - {fileID: 2100000, guid: 381fb7f0084fa1d4982d467aa0d80e0a, type: 2}
 --- !u!120 &4935357643860465841
 LineRenderer:
   m_ObjectHideFlags: 0
