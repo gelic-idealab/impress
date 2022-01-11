@@ -10,9 +10,9 @@ namespace Komodo.IMPRESS
 {
     public class WorldPulling : MonoBehaviour, IUpdatable
     {
-        public float scaleMin = 0.835f;
+        public float scaleMin = 0.1f;
 
-        public float scaleMax = 1.94f;
+        public float scaleMax = 10.0f;
 
         public GameObject debugAxes;
 
@@ -476,7 +476,22 @@ namespace Komodo.IMPRESS
 
         public float ComputeRulerValue (float playerScale)
         {
-            return (playerScale - 0.9f) / 1.3f;
+            const float rulerMin = 0.0f;
+
+            const float rulerMax = 1.0f;
+
+            if (scaleMax - scaleMin == 0)
+            {
+                Debug.LogWarning("scaleMax - scaleMin was zero. Setting to 0.1m and 10m and proceeding.");
+
+                scaleMin = 0.1f;
+
+                scaleMax = 10f;
+            }
+
+            float percentScale = (playerScale - scaleMin) / (scaleMax - scaleMin);
+
+            return (percentScale * (rulerMax - rulerMin)) + rulerMin;
         }
 
         public void UpdateRulerValue (float newScale)
@@ -501,6 +516,10 @@ namespace Komodo.IMPRESS
             // Scale
 
             handDistanceInPlayspace = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position) / playspace.localScale.x);
+
+            float clampedInitialScale = Mathf.Clamp(playspace.localScale.x, scaleMin, scaleMax);
+
+            playspace.localScale = Vector3.one * clampedInitialScale;
 
             initialPlayspaceScale = playspace.localScale.x;
 

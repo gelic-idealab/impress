@@ -99,8 +99,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: debdd6d91d87b624d876090dcc21992a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scaleMin: 0.835
-  scaleMax: 1.94
+  scaleMin: 0.1
+  scaleMax: 10
   debugAxes: {fileID: 7500337663012258881, guid: 2d19101d6d3ac6c438d33c092cc080b1,
     type: 3}
   showDebugAxes: 0
