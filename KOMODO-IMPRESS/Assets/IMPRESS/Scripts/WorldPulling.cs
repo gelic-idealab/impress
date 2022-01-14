@@ -181,6 +181,268 @@ namespace Komodo.IMPRESS
             onDoubleTriggerRelease += StopWorldPulling;
         }
 
+        // It will feel like the player is pulling the world, but really they are pushing themselves
+        // in the opposite direction, with an inverse rotation, and and inverse scale.
+        [ContextMenu("Start World Pulling")]
+        public void StartWorldPulling()
+        {
+            SetInitialValues();
+
+            animalRuler.gameObject.SetActive(true);
+
+            handToHandLine.enabled = true;
+
+            ShowPhysicalFloor();
+
+            layerManager.HideLayers();
+
+            //register our update loop to be called
+            if (GameStateManager.IsAlive)
+            {
+                GameStateManager.Instance.RegisterUpdatableObject(this);
+            }
+        }
+
+        [ContextMenu("Stop World Pulling")]
+        public void StopWorldPulling()
+        {
+            animalRuler.gameObject.SetActive(false);
+
+            handToHandLine.enabled = false;
+
+            HidePhysicalFloor();
+
+            layerManager.ShowLayers();
+
+            //deregister our update loop not be called when not in use
+            if (GameStateManager.IsAlive)
+            {
+                GameStateManager.Instance.DeRegisterUpdatableObject(this);
+            }
+
+            Debug.Log("stopped world pulling"); //TODO Remove
+        }
+
+        // Stores transforms of gameObjects and variables used to compute scale, rotation, and translation
+        protected void SetInitialValues ()
+        {
+            UpdateLocalPivotPoint(initialPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
+
+            copyOfInitialPivotPointPosition = initialPivotPointInPlayspace.position;
+
+            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
+
+            // Scale
+
+            handDistanceInPlayspace = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position) / playspace.localScale.x);
+
+            float clampedInitialScale = Mathf.Clamp(playspace.localScale.x, scaleMin, scaleMax);
+
+            playspace.localScale = Vector3.one * clampedInitialScale;
+
+            // Copy the transform to a new gameObject.
+
+            initialPlayspace.transform.position = playspace.position;
+
+            initialPlayspace.transform.rotation = playspace.rotation;
+
+            initialPlayspace.transform.localScale = playspace.localScale;
+
+            UpdateDebugAxes();
+        }
+
+        // This function is used externally by the GameStateManager.
+        // Compares the current transforms of the hands to the initial transforms, then calls various functions
+        // to make the world pulling experience happen.
+        public void OnUpdate (float unusedFloat)
+        {
+            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
+
+            // Compute Scale
+
+            handDistanceInPlayspace.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position) / playspace.localScale.x;
+
+            float unclampedScaleRatio = 1.0f / (handDistanceInPlayspace.Current / handDistanceInPlayspace.Initial);
+
+            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspace.transform.localScale.x, scaleMin, scaleMax);
+
+            if (clampedNewScale > -0.001f && clampedNewScale < 0.001f)
+            {
+                clampedNewScale = 0.0f;
+            }
+
+            float clampedScaleRatio = clampedNewScale / initialPlayspace.transform.localScale.x;
+
+            // Compute Rotation
+
+            float rotateAmount = ComputeDiffRotationY(initialPivotPointInPlayspace.rotation, currentPivotPointInPlayspace.rotation);
+
+            UpdateDebugAxes();
+
+            // Apply Scale and Rotation and Translation
+
+            RotateAndScalePlayspaceAroundPointThenTranslate(rotateAmount, clampedScaleRatio, clampedNewScale);
+
+            UpdateLineRenderersScale(clampedNewScale);
+
+            SendAvatarScaleUpdate(clampedNewScale);
+
+            // Ruler
+
+            UpdateRulerValue(clampedNewScale);
+
+            UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, clampedNewScale);
+
+            UpdateHandToHandLineEndpoints(hands[0].transform.position, hands[1].transform.position);
+        }
+
+        // Applies translation, rotation, and scale to the actual playspace.
+        public void RotateAndScalePlayspaceAroundPointThenTranslate (float amount, float scaleRatio, float newScale)
+        {
+            // Make our own client rotate in the opposite direction that our hands did
+            amount *= -1.0f;
+
+            // Temporarily store initialPlayspace's values
+            Vector3 actualInitialPlayspacePosition = initialPlayspace.transform.position;
+
+            Quaternion actualInitialPlayspaceRotation = initialPlayspace.transform.rotation;
+
+            // Update rotation and position
+
+            // We must perform this on initialPlayspace
+            // because RotateAround does not return a new 
+            // transform.
+
+            // We don't want to rotate the playspace itself, because
+            // we want to rotate from some constant initial direction.
+            // Rather than rotating from the last frame's playspace's 
+            // orientation.
+            initialPlayspace.transform.RotateAround(copyOfInitialPivotPointPosition, Vector3.up, amount);
+
+            playspace.rotation = initialPlayspace.transform.rotation;
+
+            // Scale around a point: move to new position
+            Vector3 scaledAroundPosition = ((initialPlayspace.transform.position - copyOfInitialPivotPointPosition) * scaleRatio) + copyOfInitialPivotPointPosition;
+
+            // Scale around a point: update scale
+            playspace.localScale = new Vector3(newScale, newScale, newScale);
+
+            // Translate
+            Vector3 deltaPosition = Vector3.zero - (currentPivotPointInPlayspace.position - initialPivotPointInPlayspace.position);
+
+            playspace.position = scaledAroundPosition + deltaPosition;
+
+            // Restore initialPlayspace from stored values
+            initialPlayspace.transform.position = actualInitialPlayspacePosition;
+
+            initialPlayspace.transform.rotation = actualInitialPlayspaceRotation;
+        }
+
+        // Computes the transform of an invisible object that has the average position of the hands, a rotation corresponding to 
+        // the line drawn between the two hands, and a scale corresponding to the distance between the hands.
+        // Makes all values relative to the playspace, so that even as the playspace scales, rotates, and translates, we can compute
+        // the correct difference corresponding to the user's physical actions
+        public void UpdateLocalPivotPoint (Transform pivotPointInPlayspace, Vector3 hand0Position, Vector3 hand1Position)
+        {
+            pivotPointInPlayspace.localPosition = playspace.InverseTransformPoint((hand0Position + hand1Position) / 2);
+
+            Vector3 deltaHandPositionsXZ = new Vector3(
+                (hand1Position - hand0Position).x,
+                0,
+                (hand1Position - hand0Position).z
+            );
+
+            pivotPointInPlayspace.localRotation = Quaternion.Inverse(playspace.rotation) * Quaternion.LookRotation(deltaHandPositionsXZ, Vector3.up);
+        }
+
+        // Takes a rotation difference and returns that rotation difference projected to just a rotation around the Y axis.
+        public float ComputeDiffRotationY (Quaternion initial, Quaternion current)
+        {
+            float result = (current.eulerAngles - initial.eulerAngles).y;
+
+            if (result > -0.001f && result < 0.001f)
+            {
+                result = 0.0f;
+            }
+
+            return result;
+        }
+
+        // Makes the ruler always be between the hands and the right size.
+        public void UpdateRulerPose (Vector3 hand0Position, Vector3 hand1Position, float scale)
+        {
+            animalRuler.position = ((hand0Position + hand1Position) / 2);
+
+            animalRuler.localScale = Vector3.one * scale;
+        }
+
+        // Makes the hand-to-hand line always be connected to both hands.
+        public void UpdateHandToHandLineEndpoints (Vector3 hand0Position, Vector3 hand1Position)
+        {
+            handToHandLine.SetPosition(0, hand0Position);
+
+            handToHandLine.SetPosition(1, hand1Position);
+        }
+
+        // Scales the playspace scale range to the ruler's texture offset range
+        public float ComputeRulerValue (float playerScale)
+        {
+            const float rulerMin = 0.0f;
+
+            const float rulerMax = 1.0f;
+
+            if (scaleMax - scaleMin == 0)
+            {
+                Debug.LogWarning("scaleMax - scaleMin was zero. Setting to 0.1m and 10m and proceeding.");
+
+                scaleMin = 0.1f;
+
+                scaleMax = 10f;
+            }
+
+            float percentScale = (playerScale - scaleMin) / (scaleMax - scaleMin);
+
+            return (percentScale * (rulerMax - rulerMin)) + rulerMin;
+        }
+
+        // Updates the ruler's texture offset
+        public void UpdateRulerValue (float newScale)
+        {
+            var rulerValue = ComputeRulerValue(newScale);
+
+            float min = ComputeRulerValue(scaleMin);
+
+            float max = ComputeRulerValue(scaleMax);
+
+            animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, min, max), 0));
+        }
+
+        // TODO: Makes the current line renderer scale change proportionally with the playspace scale
+        public void UpdateLineRenderersScale (float newScale)
+        {
+            // TODO: update size of drawing strokes here 
+        }
+
+        // TODO: Sends the playspace scale to other multiplayer clients, so their prefab avatar head and
+        // hand represetnations of your own client are the correct size
+        public void SendAvatarScaleUpdate (float newScale)
+        {
+            //TODO: send message that avatar scale changed to other clients
+        }
+
+        // Shows motion-sickness helper
+        private void ShowPhysicalFloor ()
+        {
+            physicalFloor.SetActive(true);
+        }
+
+        // Hides motion-sickness helper
+        private void HidePhysicalFloor ()
+        {
+            physicalFloor.SetActive(false);
+        }
+
+        // Creates debug axes iff showDebugAxes is on
         private void InitializeDebugAxes()
         {
             if (!showDebugAxes)
@@ -279,6 +541,7 @@ namespace Komodo.IMPRESS
             copyOfInitialPivotPointPositionAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[6];
         }
 
+        // Updates the debug axes that specifically need to be recalculated; others are parented
         private void UpdateDebugAxes ()
         {
             if (!showDebugAxes)
@@ -293,254 +556,15 @@ namespace Komodo.IMPRESS
             copyOfInitialPivotPointPositionAxes.transform.position = copyOfInitialPivotPointPosition;
         }
 
-        [ContextMenu("Start World Pulling")]
-        public void StartWorldPulling()
-        {
-            SetInitialValues();
-
-            animalRuler.gameObject.SetActive(true);
-
-            handToHandLine.enabled = true;
-
-            ShowPhysicalFloor();
-
-            layerManager.HideLayers();
-
-            //register our update loop to be called
-            if (GameStateManager.IsAlive)
-            {
-                GameStateManager.Instance.RegisterUpdatableObject(this);
-            }
-        }
-
-        [ContextMenu("Stop World Pulling")]
-        public void StopWorldPulling()
-        {
-            animalRuler.gameObject.SetActive(false);
-
-            handToHandLine.enabled = false;
-
-            HidePhysicalFloor();
-
-            layerManager.ShowLayers();
-
-            //deregister our update loop not be called when not in use
-            if (GameStateManager.IsAlive)
-            {
-                GameStateManager.Instance.DeRegisterUpdatableObject(this);
-            }
-
-            Debug.Log("stopped world pulling"); //TODO Remove
-        }
-
-        private void ShowPhysicalFloor ()
-        {
-            physicalFloor.SetActive(true);
-        }
-
-        private void HidePhysicalFloor ()
-        {
-            physicalFloor.SetActive(false);
-        }
-
-        public Vector3 ComputePositionDifference (UpdatingValue<Vector3> handsAveragePosition)
-        {
-            return handsAveragePosition.Initial - handsAveragePosition.Current;
-        }
-
-        public float ComputeDiffRotationY (Quaternion initial, Quaternion current)
-        {
-            float result = (current.eulerAngles - initial.eulerAngles).y;
-
-            if (result > -0.001f && result < 0.001f)
-            {
-                result = 0.0f;
-            }
-
-            return result;
-        }
-
-        public void UpdateLocalPivotPoint (Transform pivotPointInPlayspace, Vector3 hand0Position, Vector3 hand1Position)
-        {
-            pivotPointInPlayspace.localPosition = playspace.InverseTransformPoint((hand0Position + hand1Position) / 2);
-
-            Vector3 deltaHandPositionsXZ = new Vector3(
-                (hand1Position - hand0Position).x,
-                0,
-                (hand1Position - hand0Position).z
-            );
-
-            pivotPointInPlayspace.localRotation = Quaternion.Inverse(playspace.rotation) * Quaternion.LookRotation(deltaHandPositionsXZ, Vector3.up);
-        }
-
-        public void RotateAndScalePlayspaceAroundPointThenTranslate (float amount, float scaleRatio, float newScale)
-        {
-            // Make our own client rotate in the opposite direction that our hands did
-            amount *= -1.0f;
-
-            // Temporarily store initialPlayspace's values
-            Vector3 actualInitialPlayspacePosition = initialPlayspace.transform.position;
-
-            Quaternion actualInitialPlayspaceRotation = initialPlayspace.transform.rotation;
-
-            // Update rotation and position
-
-            // We must perform this on initialPlayspace
-            // because RotateAround does not return a new 
-            // transform.
-
-            // We don't want to rotate the playspace itself, because
-            // we want to rotate from some constant initial direction.
-            // Rather than rotating from the last frame's playspace's 
-            // orientation.
-            initialPlayspace.transform.RotateAround(copyOfInitialPivotPointPosition, Vector3.up, amount);
-
-            playspace.rotation = initialPlayspace.transform.rotation;
-
-            // Scale around a point: move to new position
-            Vector3 scaledAroundPosition = ((initialPlayspace.transform.position - copyOfInitialPivotPointPosition) * scaleRatio) + copyOfInitialPivotPointPosition;
-
-            // Scale around a point: update scale
-            playspace.localScale = new Vector3(newScale, newScale, newScale);
-
-            // Translate
-            Vector3 deltaPosition = Vector3.zero - (currentPivotPointInPlayspace.position - initialPivotPointInPlayspace.position);
-
-            playspace.position = scaledAroundPosition + deltaPosition;
-
-            // Restore initialPlayspace from stored values
-            initialPlayspace.transform.position = actualInitialPlayspacePosition;
-
-            initialPlayspace.transform.rotation = actualInitialPlayspaceRotation;
-        }
-
-        public void UpdateRulerPose (Vector3 hand0Position, Vector3 hand1Position, float scale)
-        {
-            animalRuler.position = ((hand0Position + hand1Position) / 2);
-
-            animalRuler.localScale = Vector3.one * scale;
-        }
-
-        public void UpdateHandToHandLineEndpoints (Vector3 hand0Position, Vector3 hand1Position)
-        {
-            handToHandLine.SetPosition(0, hand0Position);
-
-            handToHandLine.SetPosition(1, hand1Position);
-        }
-
-        public float ComputeRulerValue (float playerScale)
-        {
-            const float rulerMin = 0.0f;
-
-            const float rulerMax = 1.0f;
-
-            if (scaleMax - scaleMin == 0)
-            {
-                Debug.LogWarning("scaleMax - scaleMin was zero. Setting to 0.1m and 10m and proceeding.");
-
-                scaleMin = 0.1f;
-
-                scaleMax = 10f;
-            }
-
-            float percentScale = (playerScale - scaleMin) / (scaleMax - scaleMin);
-
-            return (percentScale * (rulerMax - rulerMin)) + rulerMin;
-        }
-
-        public void UpdateRulerValue (float newScale)
-        {
-            var rulerValue = ComputeRulerValue(newScale);
-
-            float min = ComputeRulerValue(scaleMin);
-
-            float max = ComputeRulerValue(scaleMax);
-
-            animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, min, max), 0));
-        }
-
-        protected void SetInitialValues ()
-        {
-            UpdateLocalPivotPoint(initialPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
-
-            copyOfInitialPivotPointPosition = initialPivotPointInPlayspace.position;
-
-            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
-
-            // Scale
-
-            handDistanceInPlayspace = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position) / playspace.localScale.x);
-
-            float clampedInitialScale = Mathf.Clamp(playspace.localScale.x, scaleMin, scaleMax);
-
-            playspace.localScale = Vector3.one * clampedInitialScale;
-
-            // Copy the transform to a new gameObject.
-
-            initialPlayspace.transform.position = playspace.position;
-
-            initialPlayspace.transform.rotation = playspace.rotation;
-
-            initialPlayspace.transform.localScale = playspace.localScale;
-
-            UpdateDebugAxes();
-        }
-
-        public void UpdateLineRenderersScale (float newScale)
-        {
-            // TODO: update size of drawing strokes here 
-        }
-
-        public void SendAvatarScaleUpdate (float newScale)
-        {
-            //TODO: send message that avatar scale changed to other clients
-        }
-
-        public void OnUpdate (float unusedFloat)
-        {
-            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
-
-            // Compute Scale
-
-            handDistanceInPlayspace.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position) / playspace.localScale.x;
-
-            float unclampedScaleRatio = 1.0f / (handDistanceInPlayspace.Current / handDistanceInPlayspace.Initial);
-
-            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspace.transform.localScale.x, scaleMin, scaleMax);
-
-            if (clampedNewScale > -0.001f && clampedNewScale < 0.001f)
-            {
-                clampedNewScale = 0.0f;
-            }
-
-            float clampedScaleRatio = clampedNewScale / initialPlayspace.transform.localScale.x;
-
-            // Compute Rotation
-
-            float rotateAmount = ComputeDiffRotationY(initialPivotPointInPlayspace.rotation, currentPivotPointInPlayspace.rotation);
-
-            UpdateDebugAxes();
-
-            // Apply Scale and Rotation and Translation
-
-            RotateAndScalePlayspaceAroundPointThenTranslate(rotateAmount, clampedScaleRatio, clampedNewScale);
-
-            UpdateLineRenderersScale(clampedNewScale);
-
-            SendAvatarScaleUpdate(clampedNewScale);
-
-            // Ruler
-
-            UpdateRulerValue(clampedNewScale);
-
-            UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, clampedNewScale);
-
-            UpdateHandToHandLineEndpoints(hands[0].transform.position, hands[1].transform.position);
-        }
-
         public void OnDestroy ()
         {
             Destroy(initialPlayspace);
+        }
+
+        // TODO remove
+        public Vector3 ComputePositionDifference (UpdatingValue<Vector3> handsAveragePosition)
+        {
+            return handsAveragePosition.Initial - handsAveragePosition.Current;
         }
     }
 }
