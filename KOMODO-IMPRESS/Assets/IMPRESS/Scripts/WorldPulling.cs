@@ -10,26 +10,16 @@ namespace Komodo.IMPRESS
 {
     public class WorldPulling : MonoBehaviour, IUpdatable
     {
-        public float scaleMin = 0.1f;
-
-        public float scaleMax = 10.0f;
-
-        public GameObject debugAxes;
-
-        public bool showDebugAxes;
-
-        /* 
-            A convenient way to declare a variable that has an initial value and current value.
-            To use this, do 
-
-                T varName = new UpdatingValue<T>(initialValueHere); 
-
-            to set the initial value. Then do
-
-                varName.Current = currentValueHere;
-
-            to update it. Then, you can refer to varName.Initial and varName.Current.
-        */
+        // A convenient way to declare a variable that has an initial value and current value.
+        // To use this, do 
+        //
+        //     T varName = new UpdatingValue<T>(initialValueHere); 
+        //
+        // to set the initial value. Then do
+        //
+        //     varName.Current = currentValueHere;
+        //
+        // to update it. Then, you can refer to varName.Initial and varName.Current.
         [Serializable]
         public struct UpdatingValue<T>
         {
@@ -45,39 +35,15 @@ namespace Komodo.IMPRESS
             public T Current { get; set; }
         }
 
-        [SerializeField]
-        private UpdatingValue<float> playerLocalScaleX;
+        // Assign a Komodo Player or Impress Player object so we can access its hands
+        public Transform player;
 
-        private float initialPlayspaceScale;
+        // Assign a playspace, so we can scale, rotate, and translate the avatar,
+        // while still allowing the player to move around
+        public Transform playspace;
 
-        [SerializeField]
-        private UpdatingValue<float> handDistanceInPlayspace;
-
-        [SerializeField]
-        private Vector3 initialLeftEyePosition;
-
-        // With respect to the playspace.
-        [SerializeField]
-        private UpdatingValue<Vector3> handsAverageLocalPosition;
-
-        private LineRenderer handToHandLine;
-
-        public MeshRenderer animalRulerMesh;
-
-        public Transform animalRuler;
-
-        public GameObject physicalFloor;
-
-        public LayerVisibility layerManager;
-
-        //get parent if we are switching objects between hands we want to keep track of were to place it back, to avoid hierachy parenting displacement
-        public Transform originalParentOfFirstHandTransform;
-
-        public Transform[] hands = new Transform[2];
-
-        private Transform initialPivotPointInPlayspace;
-
-        public Transform currentPivotPointInPlayspace;
+        // Assign the player rig's hands so we can read their transform values
+        private Transform[] hands = new Transform[2];
 
         // Connect this action as a callback in Unity.
         public Action onDoubleTriggerPress;
@@ -85,31 +51,56 @@ namespace Komodo.IMPRESS
         // Connect this action as a callback in Unity.
         public Action onDoubleTriggerRelease;
 
-        public Transform player;
+        // Set the min scale for the avatar
+        public float scaleMin = 0.1f;
 
-        public Transform leftEye;
+        // Set the max scale for the avatar
+        public float scaleMax = 10.0f;
 
-        public Transform playspace;
+        // This is taken from Google Tilt Brush and has a texture that shows the current scale
+        public MeshRenderer animalRulerMesh;
 
-        public TeleportPlayer teleportPlayer;
+        // This is also taken from Google Tilt Brush
+        public Transform animalRuler;
 
-        public Vector3 initialPlayspacePosition;
+        // Assign a prefab here to help the user feel oriented towards the physical world while world pulling
+        public GameObject physicalFloor;
 
-        public Quaternion initialPlayspaceRotation;
+        // If you need to manage what's visible or not during world-pulling, 
+        // set up a layer manager and assign it here
+        public LayerVisibility layerManager;
 
-        public float initialScale = 1;
+        // Assign a prefab in the inspector that will represent the position, scale, 
+        // and rotation of world-pulling objects
+        public GameObject debugAxes;
 
-        private GameObject initialPlayspace;
-
+        // Assign materials for each debug axis that gets created. See below to understand
+        // How many materials you need.
         public Material[] materials;
 
-        private GameObject initialPlayspaceAxes;
+        // Turn this on to show the various debug axes that are created.
+        public bool showDebugAxes;
 
-        private GameObject currentPlayspaceAxes;
+        private Transform initialPivotPointInPlayspace;
+
+        private Transform currentPivotPointInPlayspace;
 
         private Vector3 copyOfInitialPivotPointPosition;
 
         private GameObject copyOfInitialPivotPointPositionAxes;
+
+        private GameObject initialPlayspace;
+
+        // This is the distance between the hands divided by the scale of the playspace
+        [SerializeField]
+        private UpdatingValue<float> handDistanceInPlayspace;
+
+        // When world-pulling, this is a line segment to hint that the user should move their hands
+        private LineRenderer handToHandLine;
+
+        private GameObject initialPlayspaceAxes;
+
+        private GameObject currentPlayspaceAxes;
 
         public void Awake()
         {
@@ -127,26 +118,16 @@ namespace Komodo.IMPRESS
             }
 
             initialPlayspace = new GameObject();
-
-            initialPlayspacePosition = new Vector3();
-
-            initialPlayspaceRotation = new Quaternion();
         }
 
         public void Start()
         {
-            // This is the playspace.
             if (playspace == null)
             {
                 playspace = GameObject.FindGameObjectWithTag("XRCamera").transform;
             }
 
             player = GameObject.FindGameObjectWithTag("Player").transform;
-
-            if (!leftEye)
-            {
-                throw new UnassignedReferenceException("leftEye");
-            }
 
             if (!player)
             {
@@ -161,13 +142,6 @@ namespace Komodo.IMPRESS
             else
             {
                 throw new MissingComponentException("PlayerReferences on player");
-            }
-
-            teleportPlayer = player.GetComponent<TeleportPlayer>();
-
-            if (!teleportPlayer)
-            {
-                throw new MissingComponentException("TeleportPlayer on player");
             }
 
             InitializeDebugAxes();
@@ -312,9 +286,9 @@ namespace Komodo.IMPRESS
                 return;
             }
 
-            initialPlayspaceAxes.transform.position = initialPlayspacePosition;
+            initialPlayspaceAxes.transform.position = initialPlayspace.transform.position;
 
-            initialPlayspaceAxes.transform.rotation = initialPlayspaceRotation;
+            initialPlayspaceAxes.transform.rotation = initialPlayspace.transform.rotation;
 
             copyOfInitialPivotPointPositionAxes.transform.position = copyOfInitialPivotPointPosition;
         }
@@ -399,18 +373,7 @@ namespace Komodo.IMPRESS
             pivotPointInPlayspace.localRotation = Quaternion.Inverse(playspace.rotation) * Quaternion.LookRotation(deltaHandPositionsXZ, Vector3.up);
         }
 
-        public void UpdatePlayerPosition (Vector3 teleportLocation)
-        {
-            var finalPlayspacePosition = playspace.position;
-
-            Vector3 deltaPosition = teleportLocation - leftEye.position;
-
-            finalPlayspacePosition += deltaPosition;
-
-            playspace.position = finalPlayspacePosition;
-        }
-
-        public void RotateAndScalePlayspaceAroundPoint (float amount, float scaleRatio, float newScale)
+        public void RotateAndScalePlayspaceAroundPointThenTranslate (float amount, float scaleRatio, float newScale)
         {
             // Make our own client rotate in the opposite direction that our hands did
             amount *= -1.0f;
@@ -512,8 +475,6 @@ namespace Komodo.IMPRESS
 
             playspace.localScale = Vector3.one * clampedInitialScale;
 
-            initialPlayspaceScale = playspace.localScale.x;
-
             // Copy the transform to a new gameObject.
 
             initialPlayspace.transform.position = playspace.position;
@@ -522,19 +483,7 @@ namespace Komodo.IMPRESS
 
             initialPlayspace.transform.localScale = playspace.localScale;
 
-            // Rotation
-
-            initialPlayspacePosition = playspace.position;
-
-            initialPlayspaceRotation = playspace.rotation;
-
             UpdateDebugAxes();
-
-            // Position
-
-            initialLeftEyePosition = leftEye.position;
-
-            handsAverageLocalPosition = new UpdatingValue<Vector3>(currentPivotPointInPlayspace.position - playspace.position);
         }
 
         public void UpdateLineRenderersScale (float newScale)
@@ -547,7 +496,7 @@ namespace Komodo.IMPRESS
             //TODO: send message that avatar scale changed to other clients
         }
 
-        public void OnUpdate (float realltime)
+        public void OnUpdate (float unusedFloat)
         {
             UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
 
@@ -557,14 +506,14 @@ namespace Komodo.IMPRESS
 
             float unclampedScaleRatio = 1.0f / (handDistanceInPlayspace.Current / handDistanceInPlayspace.Initial);
 
-            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspaceScale, scaleMin, scaleMax);
+            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspace.transform.localScale.x, scaleMin, scaleMax);
 
             if (clampedNewScale > -0.001f && clampedNewScale < 0.001f)
             {
                 clampedNewScale = 0.0f;
             }
 
-            float clampedScaleRatio = clampedNewScale / initialPlayspaceScale;
+            float clampedScaleRatio = clampedNewScale / initialPlayspace.transform.localScale.x;
 
             // Compute Rotation
 
@@ -572,9 +521,9 @@ namespace Komodo.IMPRESS
 
             UpdateDebugAxes();
 
-            // Apply Scale and Rotation
+            // Apply Scale and Rotation and Translation
 
-            RotateAndScalePlayspaceAroundPoint(rotateAmount, clampedScaleRatio, clampedNewScale);
+            RotateAndScalePlayspaceAroundPointThenTranslate(rotateAmount, clampedScaleRatio, clampedNewScale);
 
             UpdateLineRenderersScale(clampedNewScale);
 
@@ -587,10 +536,6 @@ namespace Komodo.IMPRESS
             UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, clampedNewScale);
 
             UpdateHandToHandLineEndpoints(hands[0].transform.position, hands[1].transform.position);
-
-            // Position
-
-            handsAverageLocalPosition.Current = currentPivotPointInPlayspace.position - playspace.position;
         }
 
         public void OnDestroy ()
