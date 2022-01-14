@@ -560,12 +560,6 @@ namespace Komodo.IMPRESS
         {
             Destroy(initialPlayspace);
         }
-
-        // TODO remove
-        public Vector3 ComputePositionDifference (UpdatingValue<Vector3> handsAveragePosition)
-        {
-            return handsAveragePosition.Initial - handsAveragePosition.Current;
-        }
     }
 }
 
