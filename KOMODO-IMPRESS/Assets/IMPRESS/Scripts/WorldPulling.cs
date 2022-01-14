@@ -322,8 +322,6 @@ namespace Komodo.IMPRESS
         [ContextMenu("Start World Pulling")]
         public void StartWorldPulling()
         {
-            Debug.Log("started world pulling"); //TODO Remove
-
             SetInitialValues();
 
             animalRuler.gameObject.SetActive(true);
@@ -374,13 +372,6 @@ namespace Komodo.IMPRESS
         public Vector3 ComputePositionDifference (UpdatingValue<Vector3> handsAveragePosition)
         {
             return handsAveragePosition.Initial - handsAveragePosition.Current;
-        }
-
-        // Computes the dif
-
-        public float ComputeScaleRatio (UpdatingValue<float> handDistance, UpdatingValue<float> playerLocalScaleX)
-        {
-            return handDistance.Initial / handDistance.Current * (playerLocalScaleX.Initial * playerLocalScaleX.Current);
         }
 
         public float ComputeDiffRotationY (Quaternion initial, Quaternion current)
@@ -546,11 +537,6 @@ namespace Komodo.IMPRESS
             handsAverageLocalPosition = new UpdatingValue<Vector3>(currentPivotPointInPlayspace.position - playspace.position);
         }
 
-        public void ScalePlayspaceAroundPoint (float scaleRatio, float newScale)
-        {
-           
-        }
-
         public void UpdateLineRenderersScale (float newScale)
         {
             // TODO: update size of drawing strokes here 
@@ -605,10 +591,6 @@ namespace Komodo.IMPRESS
             // Position
 
             handsAverageLocalPosition.Current = currentPivotPointInPlayspace.position - playspace.position;
-
-            Vector3 newPosition = ComputePositionDifference(handsAverageLocalPosition) + initialLeftEyePosition;
-
-            //TODO put back UpdatePlayerPosition(newPosition);
         }
 
         public void OnDestroy ()
