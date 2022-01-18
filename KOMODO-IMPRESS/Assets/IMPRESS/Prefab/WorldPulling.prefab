@@ -50,9 +50,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  layersToToggle:
-  - Walkable
-  - Enclosure
+  layersToToggle: []
 --- !u!1 &4935357643860465854
 GameObject:
   m_ObjectHideFlags: 0
@@ -99,28 +97,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: debdd6d91d87b624d876090dcc21992a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player: {fileID: 0}
+  playspace: {fileID: 0}
   scaleMin: 0.1
   scaleMax: 10
-  debugAxes: {fileID: 7500337663012258881, guid: 2d19101d6d3ac6c438d33c092cc080b1,
-    type: 3}
-  showDebugAxes: 0
-  initialLeftEyePosition: {x: 0, y: 0, z: 0}
   animalRulerMesh: {fileID: 1128748475593155725}
   animalRuler: {fileID: 1149998305953642101}
   physicalFloor: {fileID: 0}
   layerManager: {fileID: 1206519868985111302}
-  originalParentOfFirstHandTransform: {fileID: 0}
-  hands:
-  - {fileID: 0}
-  - {fileID: 0}
-  currentPivotPointInPlayspace: {fileID: 0}
-  player: {fileID: 0}
-  leftEye: {fileID: 0}
-  playspace: {fileID: 0}
-  teleportPlayer: {fileID: 0}
-  initialPlayspacePosition: {x: 0, y: 0, z: 0}
-  initialPlayspaceRotation: {x: 0, y: 0, z: 0, w: 0}
-  initialScale: 1
+  debugAxes: {fileID: 7500337663012258881, guid: 2d19101d6d3ac6c438d33c092cc080b1,
+    type: 3}
   materials:
   - {fileID: 2100000, guid: e23af2a5280618c49a2340fdfba771e6, type: 2}
   - {fileID: 2100000, guid: 8e3029c485da38b46b52bcdb96b9de7a, type: 2}
@@ -129,6 +115,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 093e7be84ebdb7940ba941aee252cbf9, type: 2}
   - {fileID: 2100000, guid: 1bf2a636382de314d883fcb85d081587, type: 2}
   - {fileID: 2100000, guid: 381fb7f0084fa1d4982d467aa0d80e0a, type: 2}
+  showDebugAxes: 0
 --- !u!120 &4935357643860465841
 LineRenderer:
   m_ObjectHideFlags: 0
