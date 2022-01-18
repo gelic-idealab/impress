@@ -630,7 +630,7 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 1
   scriptingDefineSymbols:
-    1: TESTING_BEFORE_BUILDING
+    1: 
     13: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
