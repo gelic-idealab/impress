@@ -24,22 +24,22 @@ namespace Komodo.IMPRESS
         {
             if (eraserObjectLeft == null)
             {
-                Debug.LogWarning("eraserObjectLeft is missing", gameObject);
+                Debug.LogError("eraserObjectLeft is missing", gameObject);
             }
 
             if (eraserDisplayLeft == null)
             {
-                Debug.LogWarning("eraserDisplayLeft is missing", gameObject);
+                Debug.LogError("eraserDisplayLeft is missing", gameObject);
             }
 
             if (eraserObjectRight == null)
             {
-                Debug.LogWarning("eraserObjectRight is missing", gameObject);
+                Debug.LogError("eraserObjectRight is missing", gameObject);
             }
 
             if (eraserDisplayRight == null)
             {
-                Debug.LogWarning("eraserDisplayRight is missing", gameObject);
+                Debug.LogError("eraserDisplayRight is missing", gameObject);
             }
         }
 
