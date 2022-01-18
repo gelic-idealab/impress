@@ -4037,7 +4037,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc9835d2c691349f2b7d0de00f8e7dba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainClientAvatarEntityGroup: {fileID: 0}
+  mainClientAvatarEntityGroup: {fileID: 187704936}
   networkedEntities: []
 --- !u!114 &883117597
 MonoBehaviour:
