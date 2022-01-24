@@ -10,26 +10,16 @@ namespace Komodo.IMPRESS
 {
     public class WorldPulling : MonoBehaviour, IUpdatable
     {
-        public float scaleMin = 0.835f;
-
-        public float scaleMax = 1.94f;
-
-        public GameObject debugAxes;
-
-        public bool showDebugAxes;
-
-        /* 
-            A convenient way to declare a variable that has an initial value and current value.
-            To use this, do 
-
-                T varName = new UpdatingValue<T>(initialValueHere); 
-
-            to set the initial value. Then do
-
-                varName.Current = currentValueHere;
-
-            to update it. Then, you can refer to varName.Initial and varName.Current.
-        */
+        // A convenient way to declare a variable that has an initial value and current value.
+        // To use this, do 
+        //
+        //     T varName = new UpdatingValue<T>(initialValueHere); 
+        //
+        // to set the initial value. Then do
+        //
+        //     varName.Current = currentValueHere;
+        //
+        // to update it. Then, you can refer to varName.Initial and varName.Current.
         [Serializable]
         public struct UpdatingValue<T>
         {
@@ -45,40 +35,15 @@ namespace Komodo.IMPRESS
             public T Current { get; set; }
         }
 
-        [SerializeField]
-        private UpdatingValue<float> playerLocalScaleX;
+        // Assign a Komodo Player or Impress Player object so we can access its hands
+        public Transform player;
 
-        [SerializeField]
-        private UpdatingValue<float> handDistance;
+        // Assign a playspace, so we can scale, rotate, and translate the avatar,
+        // while still allowing the player to move around
+        public Transform playspace;
 
-        [SerializeField]
-        private Vector3 initialLeftEyePosition;
-
-        // With respect to the playspace.
-        [SerializeField]
-        private UpdatingValue<Vector3> handsAverageLocalPosition;
-
-        [SerializeField]
-        private UpdatingValue<float> handsRotationY;
-
-        private LineRenderer handToHandLine;
-
-        public MeshRenderer animalRulerMesh;
-
-        public Transform animalRuler;
-
-        public GameObject physicalFloor;
-
-        public LayerVisibility layerManager;
-
-        //get parent if we are switching objects between hands we want to keep track of were to place it back, to avoid hierachy parenting displacement
-        public Transform originalParentOfFirstHandTransform;
-
-        public Transform[] hands = new Transform[2];
-
-        public Transform pivotPointsParent;
-
-        public Transform pivotPoint0;
+        // Assign the player rig's hands so we can read their transform values
+        private Transform[] hands = new Transform[2];
 
         // Connect this action as a callback in Unity.
         public Action onDoubleTriggerPress;
@@ -86,47 +51,83 @@ namespace Komodo.IMPRESS
         // Connect this action as a callback in Unity.
         public Action onDoubleTriggerRelease;
 
-        public Transform player;
+        // Set the min scale for the avatar
+        public float scaleMin = 0.1f;
 
-        public Transform leftEye;
+        // Set the max scale for the avatar
+        public float scaleMax = 10.0f;
 
-        public Transform playspace;
+        // This is taken from Google Tilt Brush and has a texture that shows the current scale
+        public MeshRenderer animalRulerMesh;
 
-        public TeleportPlayer teleportPlayer;
+        // This is also taken from Google Tilt Brush
+        public Transform animalRuler;
 
-        public Quaternion initialPlayerRotation;
+        // Assign a prefab here to help the user feel oriented towards the physical world while world pulling
+        public GameObject physicalFloor;
 
-        public float initialScale = 1;
+        // If you need to manage what's visible or not during world-pulling, 
+        // set up a layer manager and assign it here
+        public LayerVisibility layerManager;
+
+        // Assign a prefab in the inspector that will represent the position, scale, 
+        // and rotation of world-pulling objects
+        public GameObject debugAxes;
+
+        // Assign materials for each debug axis that gets created. See below to understand
+        // How many materials you need.
+        public Material[] materials;
+
+        // Turn this on to show the various debug axes that are created.
+        public bool showDebugAxes;
+
+        private Transform initialPivotPointInPlayspace;
+
+        private Transform currentPivotPointInPlayspace;
+
+        private Vector3 copyOfInitialPivotPointPosition;
+
+        private GameObject copyOfInitialPivotPointPositionAxes;
+
+        private GameObject initialPlayspace;
+
+        // This is the distance between the hands divided by the scale of the playspace
+        [SerializeField]
+        private UpdatingValue<float> handDistanceInPlayspace;
+
+        // When world-pulling, this is a line segment to hint that the user should move their hands
+        private LineRenderer handToHandLine;
+
+        private GameObject initialPlayspaceAxes;
+
+        private GameObject currentPlayspaceAxes;
 
         public void Awake()
         {
-            //create hierarchy to rotate double grab objects appropriately
-            //create root parent and share it through scripts by setting it to a static field
-            pivotPointsParent = new GameObject("PivotPoints").transform;
+            initialPivotPointInPlayspace = new GameObject("InitialPivotPoint").transform;
 
-            //construct coordinate system to reference for tilting double grab object 
-            pivotPoint0 = new GameObject("PivotPoint1").transform;
+            initialPivotPointInPlayspace.parent = playspace;
+
+            currentPivotPointInPlayspace = new GameObject("CurrentPivotPoint").transform;
+
+            currentPivotPointInPlayspace.parent = playspace;
 
             if (!physicalFloor)
             {
                 throw new UnassignedReferenceException("physicalFloorReference");
             }
+
+            initialPlayspace = new GameObject();
         }
 
         public void Start()
         {
-            // This is the playspace.
             if (playspace == null)
             {
                 playspace = GameObject.FindGameObjectWithTag("XRCamera").transform;
             }
 
             player = GameObject.FindGameObjectWithTag("Player").transform;
-
-            if (!leftEye)
-            {
-                throw new UnassignedReferenceException("leftEye");
-            }
 
             if (!player)
             {
@@ -141,13 +142,6 @@ namespace Komodo.IMPRESS
             else
             {
                 throw new MissingComponentException("PlayerReferences on player");
-            }
-
-            teleportPlayer = player.GetComponent<TeleportPlayer>();
-
-            if (!teleportPlayer)
-            {
-                throw new MissingComponentException("TeleportPlayer on player");
             }
 
             InitializeDebugAxes();
@@ -187,26 +181,12 @@ namespace Komodo.IMPRESS
             onDoubleTriggerRelease += StopWorldPulling;
         }
 
-        private void InitializeDebugAxes()
-        {
-            if (!showDebugAxes)
-            {
-                return;
-            }
-
-            var _debugAxes = Instantiate(debugAxes);
-
-            _debugAxes.transform.parent = pivotPoint0;
-
-            _debugAxes.transform.localPosition = Vector3.zero;
-
-            _debugAxes.transform.localRotation = Quaternion.identity;
-        }
-
+        // It will feel like the player is pulling the world, but really they are pushing themselves
+        // in the opposite direction, with an inverse rotation, and and inverse scale.
         [ContextMenu("Start World Pulling")]
         public void StartWorldPulling()
         {
-            UpdateInitialValues();
+            SetInitialValues();
 
             animalRuler.gameObject.SetActive(true);
 
@@ -239,36 +219,132 @@ namespace Komodo.IMPRESS
             {
                 GameStateManager.Instance.DeRegisterUpdatableObject(this);
             }
+
+            Debug.Log("stopped world pulling"); //TODO Remove
         }
 
-        private void ShowPhysicalFloor ()
+        // Stores transforms of gameObjects and variables used to compute scale, rotation, and translation
+        protected void SetInitialValues ()
         {
-            physicalFloor.SetActive(true);
+            UpdateLocalPivotPoint(initialPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
+
+            copyOfInitialPivotPointPosition = initialPivotPointInPlayspace.position;
+
+            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
+
+            // Scale
+
+            handDistanceInPlayspace = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position) / playspace.localScale.x);
+
+            float clampedInitialScale = Mathf.Clamp(playspace.localScale.x, scaleMin, scaleMax);
+
+            playspace.localScale = Vector3.one * clampedInitialScale;
+
+            // Copy the transform to a new gameObject.
+
+            initialPlayspace.transform.position = playspace.position;
+
+            initialPlayspace.transform.rotation = playspace.rotation;
+
+            initialPlayspace.transform.localScale = playspace.localScale;
+
+            UpdateDebugAxes();
         }
 
-        private void HidePhysicalFloor ()
+        // This function is used externally by the GameStateManager.
+        // Compares the current transforms of the hands to the initial transforms, then calls various functions
+        // to make the world pulling experience happen.
+        public void OnUpdate (float unusedFloat)
         {
-            physicalFloor.SetActive(false);
+            UpdateLocalPivotPoint(currentPivotPointInPlayspace, hands[0].transform.position, hands[1].transform.position);
+
+            // Compute Scale
+
+            handDistanceInPlayspace.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position) / playspace.localScale.x;
+
+            float unclampedScaleRatio = 1.0f / (handDistanceInPlayspace.Current / handDistanceInPlayspace.Initial);
+
+            float clampedNewScale = Mathf.Clamp(unclampedScaleRatio * initialPlayspace.transform.localScale.x, scaleMin, scaleMax);
+
+            if (clampedNewScale > -0.001f && clampedNewScale < 0.001f)
+            {
+                clampedNewScale = 0.0f;
+            }
+
+            float clampedScaleRatio = clampedNewScale / initialPlayspace.transform.localScale.x;
+
+            // Compute Rotation
+
+            float rotateAmount = ComputeDiffRotationY(initialPivotPointInPlayspace.rotation, currentPivotPointInPlayspace.rotation);
+
+            UpdateDebugAxes();
+
+            // Apply Scale and Rotation and Translation
+
+            RotateAndScalePlayspaceAroundPointThenTranslate(rotateAmount, clampedScaleRatio, clampedNewScale);
+
+            UpdateLineRenderersScale(clampedNewScale);
+
+            SendAvatarScaleUpdate(clampedNewScale);
+
+            // Ruler
+
+            UpdateRulerValue(clampedNewScale);
+
+            UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, clampedNewScale);
+
+            UpdateHandToHandLineEndpoints(hands[0].transform.position, hands[1].transform.position);
         }
 
-        public Vector3 ComputePositionDifference (UpdatingValue<Vector3> handsAveragePosition)
+        // Applies translation, rotation, and scale to the actual playspace.
+        public void RotateAndScalePlayspaceAroundPointThenTranslate (float amount, float scaleRatio, float newScale)
         {
-            return handsAveragePosition.Initial - handsAveragePosition.Current;
+            // Make our own client rotate in the opposite direction that our hands did
+            amount *= -1.0f;
+
+            // Temporarily store initialPlayspace's values
+            Vector3 actualInitialPlayspacePosition = initialPlayspace.transform.position;
+
+            Quaternion actualInitialPlayspaceRotation = initialPlayspace.transform.rotation;
+
+            // Update rotation and position
+
+            // We must perform this on initialPlayspace
+            // because RotateAround does not return a new 
+            // transform.
+
+            // We don't want to rotate the playspace itself, because
+            // we want to rotate from some constant initial direction.
+            // Rather than rotating from the last frame's playspace's 
+            // orientation.
+            initialPlayspace.transform.RotateAround(copyOfInitialPivotPointPosition, Vector3.up, amount);
+
+            playspace.rotation = initialPlayspace.transform.rotation;
+
+            // Scale around a point: move to new position
+            Vector3 scaledAroundPosition = ((initialPlayspace.transform.position - copyOfInitialPivotPointPosition) * scaleRatio) + copyOfInitialPivotPointPosition;
+
+            // Scale around a point: update scale
+            playspace.localScale = new Vector3(newScale, newScale, newScale);
+
+            // Translate
+            Vector3 deltaPosition = Vector3.zero - (currentPivotPointInPlayspace.position - initialPivotPointInPlayspace.position);
+
+            playspace.position = scaledAroundPosition + deltaPosition;
+
+            // Restore initialPlayspace from stored values
+            initialPlayspace.transform.position = actualInitialPlayspacePosition;
+
+            initialPlayspace.transform.rotation = actualInitialPlayspaceRotation;
         }
 
-        public float ComputeScale (UpdatingValue<float> handDistance, UpdatingValue<float> playerLocalScaleX)
+        // Computes the transform of an invisible object that has the average position of the hands, a rotation corresponding to 
+        // the line drawn between the two hands, and a scale corresponding to the distance between the hands.
+        // Makes all values relative to the playspace, so that even as the playspace scales, rotates, and translates, we can compute
+        // the correct difference corresponding to the user's physical actions
+        public void UpdateLocalPivotPoint (Transform pivotPointInPlayspace, Vector3 hand0Position, Vector3 hand1Position)
         {
-            return handDistance.Initial / handDistance.Current * (playerLocalScaleX.Initial * playerLocalScaleX.Current);
-        }
-
-        public float ComputeRotationDifference (UpdatingValue<float> handsRotationY)
-        {
-            return handsRotationY.Initial - handsRotationY.Current;
-        }
-
-        public void UpdatePivotPoint (Transform pivotPoint, Vector3 hand0Position, Vector3 hand1Position)
-        {
-            pivotPoint.position = (hand0Position + hand1Position) / 2;
+            pivotPointInPlayspace.localPosition = playspace.InverseTransformPoint((hand0Position + hand1Position) / 2);
 
             Vector3 deltaHandPositionsXZ = new Vector3(
                 (hand1Position - hand0Position).x,
@@ -276,27 +352,23 @@ namespace Komodo.IMPRESS
                 (hand1Position - hand0Position).z
             );
 
-            Vector3 deltaHandPositionsXZLocal = playspace.InverseTransformDirection(deltaHandPositionsXZ);
-
-            pivotPoint.localRotation = Quaternion.LookRotation(deltaHandPositionsXZLocal, Vector3.up);
+            pivotPointInPlayspace.localRotation = Quaternion.Inverse(playspace.rotation) * Quaternion.LookRotation(deltaHandPositionsXZ, Vector3.up);
         }
 
-        public void UpdatePlayerPosition (Vector3 teleportLocation)
+        // Takes a rotation difference and returns that rotation difference projected to just a rotation around the Y axis.
+        public float ComputeDiffRotationY (Quaternion initial, Quaternion current)
         {
-            var finalPlayspacePosition = playspace.position;
+            float result = (current.eulerAngles - initial.eulerAngles).y;
 
-            Vector3 deltaPosition = teleportLocation - leftEye.position;
+            if (result > -0.001f && result < 0.001f)
+            {
+                result = 0.0f;
+            }
 
-            finalPlayspacePosition += deltaPosition;
-
-            playspace.position = finalPlayspacePosition;
+            return result;
         }
 
-        public void UpdatePlayerRotation (float rotateAmount)
-        {
-            playspace.localRotation = initialPlayerRotation * Quaternion.AngleAxis(rotateAmount, Vector3.up);
-        }
-
+        // Makes the ruler always be between the hands and the right size.
         public void UpdateRulerPose (Vector3 hand0Position, Vector3 hand1Position, float scale)
         {
             animalRuler.position = ((hand0Position + hand1Position) / 2);
@@ -304,6 +376,7 @@ namespace Komodo.IMPRESS
             animalRuler.localScale = Vector3.one * scale;
         }
 
+        // Makes the hand-to-hand line always be connected to both hands.
         public void UpdateHandToHandLineEndpoints (Vector3 hand0Position, Vector3 hand1Position)
         {
             handToHandLine.SetPosition(0, hand0Position);
@@ -311,14 +384,31 @@ namespace Komodo.IMPRESS
             handToHandLine.SetPosition(1, hand1Position);
         }
 
+        // Scales the playspace scale range to the ruler's texture offset range
         public float ComputeRulerValue (float playerScale)
         {
-            return (playerScale - 0.9f) / 1.3f;
+            const float rulerMin = 0.0f;
+
+            const float rulerMax = 1.0f;
+
+            if (scaleMax - scaleMin == 0)
+            {
+                Debug.LogWarning("scaleMax - scaleMin was zero. Setting to 0.1m and 10m and proceeding.");
+
+                scaleMin = 0.1f;
+
+                scaleMax = 10f;
+            }
+
+            float percentScale = (playerScale - scaleMin) / (scaleMax - scaleMin);
+
+            return (percentScale * (rulerMax - rulerMin)) + rulerMin;
         }
 
-        public void UpdateRulerValue (float newScaleRatio)
+        // Updates the ruler's texture offset
+        public void UpdateRulerValue (float newScale)
         {
-            var rulerValue = ComputeRulerValue(newScaleRatio);
+            var rulerValue = ComputeRulerValue(newScale);
 
             float min = ComputeRulerValue(scaleMin);
 
@@ -327,66 +417,148 @@ namespace Komodo.IMPRESS
             animalRulerMesh.material.SetTextureOffset("_MainTex", new Vector2(Mathf.Clamp(rulerValue, min, max), 0));
         }
 
-        protected void UpdateInitialValues ()
+        // TODO: Makes the current line renderer scale change proportionally with the playspace scale
+        public void UpdateLineRenderersScale (float newScale)
         {
-            UpdatePivotPoint(pivotPoint0, hands[0].transform.position, hands[1].transform.position);
-
-            // Scale
-
-            playerLocalScaleX = new UpdatingValue<float>(playspace.localScale.x * initialScale);
-
-            handDistance = new UpdatingValue<float>(Vector3.Distance(hands[0].position, hands[1].position));
-
-            // Rotation
-
-            initialPlayerRotation = playspace.localRotation * Quaternion.Inverse(playspace.localRotation);
-
-            handsRotationY = new UpdatingValue<float>(pivotPoint0.localEulerAngles.y);
-
-            // Position
-
-            initialLeftEyePosition = leftEye.position;
-
-            handsAverageLocalPosition = new UpdatingValue<Vector3>(pivotPoint0.position - playspace.position);
+            // TODO: update size of drawing strokes here 
         }
 
-        public void OnUpdate(float realltime)
+        // TODO: Sends the playspace scale to other multiplayer clients, so their prefab avatar head and
+        // hand represetnations of your own client are the correct size
+        public void SendAvatarScaleUpdate (float newScale)
         {
-            // Scale
+            //TODO: send message that avatar scale changed to other clients
+        }
 
-            handDistance.Current = Vector3.Distance(hands[0].transform.position, hands[1].transform.position);
+        // Shows motion-sickness helper
+        private void ShowPhysicalFloor ()
+        {
+            physicalFloor.SetActive(true);
+        }
 
-            playerLocalScaleX.Current = playspace.localScale.x;
+        // Hides motion-sickness helper
+        private void HidePhysicalFloor ()
+        {
+            physicalFloor.SetActive(false);
+        }
 
-            float newScale = ComputeScale(handDistance, playerLocalScaleX);
+        // Creates debug axes iff showDebugAxes is on
+        private void InitializeDebugAxes()
+        {
+            if (!showDebugAxes)
+            {
+                return;
+            }
 
-            newScale = Mathf.Clamp(newScale, scaleMin, scaleMax);
+            var initialPivotPointAxes = Instantiate(debugAxes);
 
-            UpdateRulerValue(newScale);
+            initialPivotPointAxes.transform.parent = initialPivotPointInPlayspace;
 
-            teleportPlayer.UpdatePlayerScale(newScale);
+            initialPivotPointAxes.transform.localPosition = Vector3.zero;
 
-            // Rotation
+            initialPivotPointAxes.transform.localRotation = Quaternion.identity;
 
-            UpdatePivotPoint(pivotPoint0, hands[0].transform.position, hands[1].transform.position);
+            initialPivotPointAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[0];
 
-            handsRotationY.Current = pivotPoint0.localEulerAngles.y;
+            initialPivotPointAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[0];
 
-            float rotateAmount = ComputeRotationDifference(handsRotationY);
+            initialPivotPointAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[0];
 
-            UpdatePlayerRotation(rotateAmount);
+            var currentPivotPointAxes = Instantiate(debugAxes);
 
-            UpdateRulerPose(hands[0].transform.position, hands[1].transform.position, newScale);
+            currentPivotPointAxes.transform.parent = currentPivotPointInPlayspace;
 
-            UpdateHandToHandLineEndpoints(hands[0].transform.position, hands[1].transform.position);
+            currentPivotPointAxes.transform.localPosition = Vector3.zero;
 
-            // Position
+            currentPivotPointAxes.transform.localRotation = Quaternion.identity;
 
-            handsAverageLocalPosition.Current = pivotPoint0.position - playspace.position;
+            currentPivotPointAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[1];
 
-            Vector3 newPosition = ComputePositionDifference(handsAverageLocalPosition) + initialLeftEyePosition;
+            currentPivotPointAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[1];
 
-            UpdatePlayerPosition(newPosition);
+            currentPivotPointAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[1];
+
+            initialPlayspaceAxes = Instantiate(debugAxes);
+
+            initialPlayspaceAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[2];
+
+            initialPlayspaceAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[2];
+
+            initialPlayspaceAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[2];
+
+            currentPlayspaceAxes = Instantiate(debugAxes);
+
+            currentPlayspaceAxes.transform.parent = playspace;
+
+            currentPlayspaceAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[3];
+
+            currentPlayspaceAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[3];
+
+            currentPlayspaceAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[3];
+
+            var hand0Axes = Instantiate(debugAxes);
+
+            hand0Axes.transform.parent = hands[0];
+
+            hand0Axes.transform.localPosition = Vector3.zero;
+
+            hand0Axes.transform.localRotation = Quaternion.identity;
+
+            hand0Axes.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+
+            hand0Axes.transform.GetChild(0).GetComponent<Renderer>().material = materials[4];
+
+            hand0Axes.transform.GetChild(1).GetComponent<Renderer>().material = materials[4];
+
+            hand0Axes.transform.GetChild(2).GetComponent<Renderer>().material = materials[4];
+
+            var hand1Axes = Instantiate(debugAxes);
+
+            hand1Axes.transform.parent = hands[1];
+
+            hand1Axes.transform.localPosition = Vector3.zero;
+
+            hand1Axes.transform.localRotation = Quaternion.identity;
+
+            hand1Axes.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+
+            hand1Axes.transform.GetChild(0).GetComponent<Renderer>().material = materials[5];
+
+            hand1Axes.transform.GetChild(1).GetComponent<Renderer>().material = materials[5];
+
+            hand1Axes.transform.GetChild(2).GetComponent<Renderer>().material = materials[5];
+
+            copyOfInitialPivotPointPositionAxes = Instantiate(debugAxes);
+
+            copyOfInitialPivotPointPositionAxes.transform.localPosition = Vector3.zero;
+
+            copyOfInitialPivotPointPositionAxes.transform.localRotation = Quaternion.identity;
+
+            copyOfInitialPivotPointPositionAxes.transform.GetChild(0).GetComponent<Renderer>().material = materials[6];
+
+            copyOfInitialPivotPointPositionAxes.transform.GetChild(1).GetComponent<Renderer>().material = materials[6];
+
+            copyOfInitialPivotPointPositionAxes.transform.GetChild(2).GetComponent<Renderer>().material = materials[6];
+        }
+
+        // Updates the debug axes that specifically need to be recalculated; others are parented
+        private void UpdateDebugAxes ()
+        {
+            if (!showDebugAxes)
+            {
+                return;
+            }
+
+            initialPlayspaceAxes.transform.position = initialPlayspace.transform.position;
+
+            initialPlayspaceAxes.transform.rotation = initialPlayspace.transform.rotation;
+
+            copyOfInitialPivotPointPositionAxes.transform.position = copyOfInitialPivotPointPosition;
+        }
+
+        public void OnDestroy ()
+        {
+            Destroy(initialPlayspace);
         }
     }
 }
