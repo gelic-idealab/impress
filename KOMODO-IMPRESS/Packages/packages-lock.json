@@ -41,7 +41,7 @@
       "url": "https://package.openupm.com"
     },
     "com.graingeridealab.komodo": {
-      "version": "0.5.4",
+      "version": "0.5.8",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -307,7 +307,7 @@
       }
     },
     "com.unity.xr.legacyinputhelpers": {
-      "version": "2.1.7",
+      "version": "2.1.8",
       "depth": 1,
       "source": "registry",
       "dependencies": {

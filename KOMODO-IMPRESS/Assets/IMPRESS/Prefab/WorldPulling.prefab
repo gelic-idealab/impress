@@ -50,9 +50,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  layersToToggle:
-  - Walkable
-  - Enclosure
+  layersToToggle: []
 --- !u!1 &4935357643860465854
 GameObject:
   m_ObjectHideFlags: 0
@@ -103,7 +101,8 @@ MonoBehaviour:
   scaleMax: 1.94
   debugAxes: {fileID: 7500337663012258881, guid: 2d19101d6d3ac6c438d33c092cc080b1,
     type: 3}
-  initialPlayspacePosition: {x: 0, y: 0, z: 0}
+  showDebugAxes: 0
+  initialLeftEyePosition: {x: 0, y: 0, z: 0}
   animalRulerMesh: {fileID: 1128748475593155725}
   animalRuler: {fileID: 1149998305953642101}
   physicalFloor: {fileID: 0}
@@ -114,9 +113,9 @@ MonoBehaviour:
   - {fileID: 0}
   pivotPointsParent: {fileID: 0}
   pivotPoint0: {fileID: 0}
-  doUpdateInitialValues: 0
   player: {fileID: 0}
-  xrPlayer: {fileID: 0}
+  leftEye: {fileID: 0}
+  playspace: {fileID: 0}
   teleportPlayer: {fileID: 0}
   initialPlayerRotation: {x: 0, y: 0, z: 0, w: 0}
   initialScale: 1
