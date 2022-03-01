@@ -2641,7 +2641,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recordButtons: {fileID: 5557383594187636121}
   startCapture: {fileID: 3502234553169896962}
-  stopCapture: {fileID: 0}
+  stopCapture: {fileID: 8216690834694950564}
 --- !u!1 &2269231602577643210
 GameObject:
   m_ObjectHideFlags: 0
