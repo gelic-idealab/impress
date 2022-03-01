@@ -2127,6 +2127,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 791676ffede158343b6c2876c75003b5, type: 3}
+--- !u!4 &192125438 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2312684449969552614, guid: 791676ffede158343b6c2876c75003b5,
+    type: 3}
+  m_PrefabInstance: {fileID: 192125437}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &192125439 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1328169750951072401, guid: 791676ffede158343b6c2876c75003b5,
@@ -4173,7 +4179,7 @@ MonoBehaviour:
         m_MethodName: SetXZPosition
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 8472895829013641718}
+          m_ObjectArgument: {fileID: 192125438}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Transform, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
@@ -4185,7 +4191,7 @@ MonoBehaviour:
         m_MethodName: BeginBlinding
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 8472895829013641718}
+          m_ObjectArgument: {fileID: 192125438}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Transform, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
