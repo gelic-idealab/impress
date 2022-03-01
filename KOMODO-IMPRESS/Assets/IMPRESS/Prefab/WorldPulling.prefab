@@ -99,8 +99,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   playspace: {fileID: 0}
-  scaleMin: 0.835
-  scaleMax: 1.94
+  scaleMin: 0.1
+  scaleMax: 10
   animalRulerMesh: {fileID: 1128748475593155725}
   animalRuler: {fileID: 1149998305953642101}
   physicalFloor: {fileID: 0}
