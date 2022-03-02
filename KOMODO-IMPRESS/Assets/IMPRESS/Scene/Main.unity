@@ -4411,7 +4411,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 296d4aa5b26714c40bd3b979b8e5bc30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isVerbose: 0
+  isVerbose: 1
   doLogClientEvents: 1
   doLogCustomInteractions: 1
   doLogPositionEvents: 0
@@ -4428,7 +4428,7 @@ MonoBehaviour:
   enableVRButtonFails: 0
   closeSyncConnectionFails: 0
   closeChatConnectionFails: 0
-  doLogMessageEvents: 0
+  doLogMessageEvents: 1
   clientId: 0
   sessionId: 0
   isTeacher: 0
